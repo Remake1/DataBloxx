@@ -1,8 +1,18 @@
-import { BLOCK } from '../core/constants'
+import * as Phaser from 'phaser'
+import { BLOCK, CRANE } from '../core/constants'
 
 export class DifficultySystem {
   getCraneSpeed(blocksPlaced: number) {
     return Math.min(2.35, 0.86 + blocksPlaced * 0.075)
+  }
+
+  getCraneArcHeight(blocksPlaced: number) {
+    const progress = Phaser.Math.Clamp(
+      (blocksPlaced - CRANE.arcRampStartBlocks) / CRANE.arcRampBlocks,
+      0,
+      1,
+    )
+    return Phaser.Math.Linear(CRANE.minArcHeight, CRANE.maxArcHeight, progress)
   }
 
   getNextBlockWidth(blocksPlaced: number) {

@@ -25,6 +25,7 @@ export class GameScene extends Phaser.Scene {
   private levelStartMs = 0
   private isGameOver = false
   private blockKindIndex = 0
+  private lastImpactSoundMs = 0
 
   constructor() {
     super('GameScene')
@@ -36,6 +37,7 @@ export class GameScene extends Phaser.Scene {
     this.isGameOver = false
     this.blocks = []
     this.blockKindIndex = 0
+    this.lastImpactSoundMs = 0
     this.scoring.reset()
     this.cameras.main.setBackgroundColor('#87ceeb')
     this.cameras.main.scrollY = 0
@@ -45,8 +47,8 @@ export class GameScene extends Phaser.Scene {
       GAME_WIDTH,
       GAME_HEIGHT + Math.abs(WORLD.topY) + 1200,
       40,
-      true,
-      true,
+      false,
+      false,
       false,
       true,
     )
@@ -77,7 +79,12 @@ export class GameScene extends Phaser.Scene {
       return
     }
 
-    this.crane.update(delta, this.difficulty.getCraneSpeed(this.scoring.getState().blocks))
+    const blocksPlaced = this.scoring.getState().blocks
+    this.crane.update(
+      delta,
+      this.difficulty.getCraneSpeed(blocksPlaced),
+      this.difficulty.getCraneArcHeight(blocksPlaced),
+    )
     this.scoreSettledBlocks()
     this.stabilizeSettledBlocks()
     this.applyStability()
@@ -109,6 +116,8 @@ export class GameScene extends Phaser.Scene {
     if (this.blocks.length >= this.level.targetBlocks) {
       this.placement.setEnabled(false)
       this.crane?.setVisible(false)
+    } else {
+      this.prepareNextBlock()
     }
   }
 
@@ -122,6 +131,12 @@ export class GameScene extends Phaser.Scene {
     const result = this.scoring.scorePlacement(block, previousBlock)
     block.markScored()
     this.scoring.setUptime(this.stability.getUptime(this.blocks))
+    if (result.perfect) {
+      this.playSound(AssetKeys.connected, 0.55)
+    } else {
+      this.playImpactSound()
+      this.time.delayedCall(90, () => this.playSound(AssetKeys.connected, 0.55))
+    }
     this.effects?.pulse(block.x, block.y, block.kind, result.perfect)
     gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
     gameEvents.emit(
@@ -134,7 +149,6 @@ export class GameScene extends Phaser.Scene {
       return
     }
 
-    this.prepareNextBlock()
   }
 
   private applyStability() {
@@ -156,7 +170,7 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  /** Gently correct settled blocks: nudge toward center and reduce wobble */
+  /** Lightly damp scored blocks without making the tower feel locked in place. */
   private stabilizeSettledBlocks() {
     for (const block of this.blocks) {
       if (!block.hasScored()) {
@@ -165,22 +179,19 @@ export class GameScene extends Phaser.Scene {
 
       const body = block.body as MatterJS.BodyType
 
-      // Reduce any residual angular velocity (anti-jelly)
-      if (Math.abs(body.angularVelocity) > 0.001) {
-        this.matter.body.setAngularVelocity(body, body.angularVelocity * 0.88)
+      if (Math.abs(body.angularVelocity) > 0.004) {
+        this.matter.body.setAngularVelocity(body, body.angularVelocity * 0.96)
       }
 
-      // Dampen lateral drift
-      if (Math.abs(body.velocity.x) > 0.05) {
+      if (Math.abs(body.velocity.x) > 0.08) {
         this.matter.body.setVelocity(body, {
-          x: body.velocity.x * 0.90,
+          x: body.velocity.x * 0.96,
           y: body.velocity.y,
         })
       }
 
-      // Gently nudge rotation back toward 0
-      if (Math.abs(block.rotation) > 0.005) {
-        const correctedAngle = block.rotation * 0.97
+      if (Math.abs(block.rotation) > 0.03) {
+        const correctedAngle = block.rotation * 0.995
         this.matter.body.setAngle(body, correctedAngle)
       }
     }
@@ -198,7 +209,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.isGameOver = true
-    this.sound.play(AssetKeys.levelComplete)
+    this.playSound(AssetKeys.levelComplete, 0.85)
     this.placement?.setEnabled(false)
     this.crane?.setVisible(false)
     const state = this.scoring.getState()
@@ -225,7 +236,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.isGameOver = true
-    this.sound.play(AssetKeys.levelFailed)
+    this.playSound(AssetKeys.levelFailed, 0.85)
     this.placement?.setEnabled(false)
     this.crane?.setVisible(false)
     gameEvents.emit(EVENTS.gameStatus, 'Outage. Retry or return to level select.')
@@ -313,6 +324,23 @@ export class GameScene extends Phaser.Scene {
     const seconds = Math.max(0, Math.round(timeMs / 1000))
     const minutes = Math.floor(seconds / 60)
     return `${minutes}:${String(seconds % 60).padStart(2, '0')}`
+  }
+
+  private playImpactSound() {
+    if (this.time.now - this.lastImpactSoundMs < 120) {
+      return
+    }
+
+    this.lastImpactSoundMs = this.time.now
+    this.playSound(AssetKeys.fallImpact, 0.5)
+  }
+
+  private playSound(key: string, volume: number) {
+    if (!this.cache.audio.exists(key)) {
+      return
+    }
+
+    this.sound.play(key, { volume })
   }
 
   private moveCamera() {
