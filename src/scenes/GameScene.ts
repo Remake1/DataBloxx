@@ -25,6 +25,7 @@ export class GameScene extends Phaser.Scene {
   private levelStartMs = 0
   private isGameOver = false
   private blockKindIndex = 0
+  private lastImpactSoundMs = 0
 
   constructor() {
     super('GameScene')
@@ -36,6 +37,7 @@ export class GameScene extends Phaser.Scene {
     this.isGameOver = false
     this.blocks = []
     this.blockKindIndex = 0
+    this.lastImpactSoundMs = 0
     this.scoring.reset()
     this.cameras.main.setBackgroundColor('#87ceeb')
     this.cameras.main.scrollY = 0
@@ -122,6 +124,12 @@ export class GameScene extends Phaser.Scene {
     const result = this.scoring.scorePlacement(block, previousBlock)
     block.markScored()
     this.scoring.setUptime(this.stability.getUptime(this.blocks))
+    if (result.perfect) {
+      this.playSound(AssetKeys.connected, 0.55)
+    } else {
+      this.playImpactSound()
+      this.time.delayedCall(90, () => this.playSound(AssetKeys.connected, 0.55))
+    }
     this.effects?.pulse(block.x, block.y, block.kind, result.perfect)
     gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
     gameEvents.emit(
@@ -198,7 +206,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.isGameOver = true
-    this.sound.play(AssetKeys.levelComplete)
+    this.playSound(AssetKeys.levelComplete, 0.85)
     this.placement?.setEnabled(false)
     this.crane?.setVisible(false)
     const state = this.scoring.getState()
@@ -225,7 +233,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.isGameOver = true
-    this.sound.play(AssetKeys.levelFailed)
+    this.playSound(AssetKeys.levelFailed, 0.85)
     this.placement?.setEnabled(false)
     this.crane?.setVisible(false)
     gameEvents.emit(EVENTS.gameStatus, 'Outage. Retry or return to level select.')
@@ -313,6 +321,23 @@ export class GameScene extends Phaser.Scene {
     const seconds = Math.max(0, Math.round(timeMs / 1000))
     const minutes = Math.floor(seconds / 60)
     return `${minutes}:${String(seconds % 60).padStart(2, '0')}`
+  }
+
+  private playImpactSound() {
+    if (this.time.now - this.lastImpactSoundMs < 120) {
+      return
+    }
+
+    this.lastImpactSoundMs = this.time.now
+    this.playSound(AssetKeys.fallImpact, 0.5)
+  }
+
+  private playSound(key: string, volume: number) {
+    if (!this.cache.audio.exists(key)) {
+      return
+    }
+
+    this.sound.play(key, { volume })
   }
 
   private moveCamera() {
