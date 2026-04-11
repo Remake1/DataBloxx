@@ -47,8 +47,8 @@ export class GameScene extends Phaser.Scene {
       GAME_WIDTH,
       GAME_HEIGHT + Math.abs(WORLD.topY) + 1200,
       40,
-      true,
-      true,
+      false,
+      false,
       false,
       true,
     )
