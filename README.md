@@ -1,5 +1,48 @@
-# Vue 3 + TypeScript + Vite
+# DataBloxx
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+DataBloxx is a small web game starter inspired by the tower-building feel of
+City/Tower Bloxx, rebranded around stacking datacenter modules.
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## Stack
+
+- Phaser 4
+- Matter.js physics through Phaser
+- Vite
+- TypeScript
+- Vue 3
+
+## Run
+
+```sh
+pnpm install
+pnpm dev
+```
+
+Build the production bundle:
+
+```sh
+pnpm build
+```
+
+## Structure
+
+```txt
+src/
+  core/       game config, constants, generated asset registry, event bus
+  scenes/     BootScene, MenuScene, GameScene, UIScene
+  entities/   DatacenterBlock, CraneArm, Effects
+  systems/    Placement, scoring, stability, difficulty
+  ui/         Vue HUD, score readouts, combo, uptime meter
+  audio/      placeholder for sound assets
+  assets/     placeholder for source art assets
+```
+
+## Current Slice
+
+- Tap, click, or press space to drop a datacenter block from the moving crane.
+- Matter physics handles falling, collision, tilt, and settling.
+- Score rewards alignment, combo rewards clean deployments, and uptime drains
+  when the tower drifts or tilts.
+- Vue renders the HUD above the Phaser canvas.
+
+Phaser install guidance: https://docs.phaser.io/phaser/getting-started/installation
