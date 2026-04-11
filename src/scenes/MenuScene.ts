@@ -50,67 +50,49 @@ export class MenuScene extends Phaser.Scene {
 
   private drawLevelGrid() {
     const completions = getAllLevelCompletions()
-    const columns = 2
-    const tileWidth = 196
-    const tileHeight = 126
-    const gap = 18
-    const startX = GAME_WIDTH / 2 - tileWidth - gap / 2
+    const columns = 3
+    const tileSize = 100
+    const gap = 30
+    const totalWidth = columns * tileSize + (columns - 1) * gap
+    const startX = GAME_WIDTH / 2 - totalWidth / 2
     const startY = 420
 
     LEVELS.forEach((level, index) => {
       const column = index % columns
       const row = Math.floor(index / columns)
-      const x = startX + column * (tileWidth + gap)
-      const y = startY + row * (tileHeight + gap)
+      const x = startX + column * (tileSize + gap)
+      const y = startY + row * (tileSize + gap)
       const completion = completions[String(level.id)]
 
-      const tile = this.add.rectangle(x, y, tileWidth, tileHeight, 0xffffff, 0.9)
+      const tile = this.add.rectangle(x, y, tileSize, tileSize, 0xffffff, 0.9)
       tile.setOrigin(0)
       tile.setStrokeStyle(3, completion ? 0x3b82f6 : 0xcbd5e1, 1)
       tile.setInteractive({ useHandCursor: true })
       tile.on('pointerdown', () => this.startGame(level))
 
-      this.add.text(x + 16, y + 14, String(level.id).padStart(2, '0'), {
-        color: completion ? '#3b82f6' : '#f59e0b',
-        fontFamily: 'Inter, system-ui, sans-serif',
-        fontSize: '30px',
-        fontStyle: '800',
-      })
-
-      this.add.text(x + 70, y + 18, level.name, {
-        color: '#1e293b',
-        fontFamily: 'Inter, system-ui, sans-serif',
-        fontSize: '16px',
-        fontStyle: '800',
-        wordWrap: { width: 106 },
-      })
-
-      this.add.text(x + 16, y + 62, `${level.targetBlocks} blocks required`, {
-        color: '#64748b',
-        fontFamily: 'Inter, system-ui, sans-serif',
-        fontSize: '14px',
-      })
-
-      this.add.text(x + 16, y + 88, this.getCompletionText(completion), {
+      const numberY = completion ? y + tileSize / 2 - 12 : y + tileSize / 2
+      this.add.text(x + tileSize / 2, numberY, String(level.id), {
         color: completion ? '#3b82f6' : '#94a3b8',
         fontFamily: 'Inter, system-ui, sans-serif',
-        fontSize: '13px',
-      })
+        fontSize: '42px',
+        fontStyle: '800',
+      }).setOrigin(0.5)
+
+      if (completion) {
+        let starsCount = 1
+        if (completion.finalUptime >= 90) {
+          starsCount = 3
+        } else if (completion.finalUptime >= 75) {
+          starsCount = 2
+        }
+
+        const starsText = '★'.repeat(starsCount) + '☆'.repeat(3 - starsCount)
+        this.add.text(x + tileSize / 2, y + tileSize - 22, starsText, {
+          color: '#f59e0b',
+          fontSize: '22px',
+        }).setOrigin(0.5)
+      }
     })
-  }
-
-  private getCompletionText(completion: ReturnType<typeof getAllLevelCompletions>[string]) {
-    if (!completion) {
-      return 'Not completed'
-    }
-
-    return `${this.formatTime(completion.timeMs)} / ${Math.round(completion.finalUptime)}% uptime`
-  }
-
-  private formatTime(timeMs: number) {
-    const seconds = Math.max(0, Math.round(timeMs / 1000))
-    const minutes = Math.floor(seconds / 60)
-    return `${minutes}:${String(seconds % 60).padStart(2, '0')}`
   }
 
   private addBackground() {
