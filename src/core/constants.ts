@@ -3,7 +3,7 @@ export const GAME_HEIGHT = 960
 
 export const WORLD = {
   topY: -2200,
-  floorY: 890,
+  floorY: 930,
   floorHeight: 70,
   targetX: GAME_WIDTH / 2,
   safeTiltRadians: 0.22,
@@ -17,6 +17,7 @@ export const BLOCK = {
   height: 56,
   minWidth: 104,
   maxWidth: 156,
+  floorTouchTolerance: 3,
   restitution: 0,
   friction: 1,
   frictionAir: 0.038,

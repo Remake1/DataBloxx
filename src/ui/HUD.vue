@@ -14,8 +14,8 @@ import { hudState } from './gameState'
       <UptimeMeter :value="hudState.uptime" />
     </div>
 
-    <div class="hud__bottom">
-      <p class="hud__message">{{ hudState.message }}</p>
+    <div class="hud__bottom_line">
+      <div class="hud__bottom_uptime_bar" :style="{ width: `${Math.round(hudState.uptime)}%` }" />
     </div>
   </aside>
 </template>

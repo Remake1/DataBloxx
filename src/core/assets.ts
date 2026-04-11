@@ -199,14 +199,16 @@ function createFloor(scene: Phaser.Scene) {
   const height = 86
   const graphics = scene.add.graphics()
 
-  graphics.fillStyle(0x172121, 1)
-  graphics.fillRoundedRect(0, 0, width, height, 8)
-  graphics.fillStyle(0x24413f, 1)
-  graphics.fillRect(0, 0, width, 14)
-  graphics.lineStyle(2, 0x55d6be, 0.6)
-
-  for (let x = 24; x < width; x += 48) {
-    graphics.lineBetween(x, 22, x + 24, height - 14)
+  graphics.fillStyle(0x3e464c, 1) // Dark concrete base
+  graphics.fillRoundedRect(0, 0, width, height, 6)
+  
+  graphics.fillStyle(0x2a3035, 1) // Platform edge shadow
+  graphics.fillRect(0, 0, width, 12)
+  
+  // Concrete expansion joints
+  graphics.lineStyle(3, 0x1f2428, 0.6)
+  for (let x = 40; x < width; x += 80) {
+    graphics.lineBetween(x, 12, x, height)
   }
 
   graphics.generateTexture(AssetKeys.floor, width, height)
