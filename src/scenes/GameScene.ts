@@ -104,6 +104,11 @@ export class GameScene extends Phaser.Scene {
     const result = this.scoring.scorePlacement(block, previousBlock)
     block.markScored()
     this.effects?.pulse(block.x, block.y, result.perfect ? 0x55d6be : 0xffcc66)
+    if (result.perfect) {
+      this.sound.play(AssetKeys.connected)
+    } else {
+      this.sound.play(AssetKeys.fallImpact)
+    }
     gameEvents.emit(EVENTS.scoreChanged, result.state)
     gameEvents.emit(
       EVENTS.gameStatus,
@@ -141,6 +146,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.isGameOver = true
+    this.sound.play(AssetKeys.levelComplete)
     this.placement?.setEnabled(false)
     const state = this.scoring.getState()
     const timeMs = Math.max(0, this.time.now - this.levelStartMs)
@@ -166,6 +172,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.isGameOver = true
+    this.sound.play(AssetKeys.levelFailed)
     this.placement?.setEnabled(false)
     gameEvents.emit(EVENTS.gameStatus, 'Outage. Retry or return to level select.')
     this.drawEndPanel('Deployment Failed', 'Uptime target lost.', [

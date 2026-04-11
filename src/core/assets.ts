@@ -2,6 +2,10 @@ export const AssetKeys = {
   block: 'datacenter-block',
   floor: 'datacenter-floor',
   pixel: 'pixel',
+  levelComplete: 'level-complete',
+  connected: 'connected',
+  levelFailed: 'level-failed',
+  fallImpact: 'fall-impact',
 } as const
 
 export function createGeneratedAssets(scene: Phaser.Scene) {
