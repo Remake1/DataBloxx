@@ -3,6 +3,7 @@ import { EVENTS, GAME_HEIGHT, GAME_WIDTH } from '../core/constants'
 import { gameEvents } from '../core/events'
 import { LEVELS, type LevelDefinition } from '../core/levels'
 import { getAllLevelCompletions } from '../core/progress'
+import { getEndlessRecord } from '../core/endless'
 
 export class MenuScene extends Phaser.Scene {
   constructor() {
@@ -34,9 +35,10 @@ export class MenuScene extends Phaser.Scene {
       .setOrigin(0.5)
 
     this.drawLevelGrid()
+    this.drawEndlessButton()
 
     this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT - 96, 'Matter.js physics via Phaser 4', {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 32, 'Matter.js physics via Phaser 4', {
         color: '#94a3b8',
         fontFamily: 'Inter, system-ui, sans-serif',
         fontSize: '15px',
@@ -48,6 +50,10 @@ export class MenuScene extends Phaser.Scene {
     this.scene.start('GameScene', { levelId: level.id })
   }
 
+  private startEndless() {
+    this.scene.start('GameScene', { endless: true })
+  }
+
   private drawLevelGrid() {
     const completions = getAllLevelCompletions()
     const columns = 3
@@ -55,8 +61,9 @@ export class MenuScene extends Phaser.Scene {
     const gap = 30
     const totalWidth = columns * tileSize + (columns - 1) * gap
     const startX = GAME_WIDTH / 2 - totalWidth / 2
-    const startY = 420
+    const startY = 380
 
+    // Draw regular levels
     LEVELS.forEach((level, index) => {
       const column = index % columns
       const row = Math.floor(index / columns)
@@ -93,6 +100,41 @@ export class MenuScene extends Phaser.Scene {
         }).setOrigin(0.5)
       }
     })
+  }
+
+  private drawEndlessButton() {
+    const endlessRecord = getEndlessRecord()
+    const buttonWidth = 380
+    const buttonHeight = 70
+    const buttonX = GAME_WIDTH / 2
+    const buttonY = GAME_HEIGHT - 132
+    const radius = 20
+
+    // Create rounded rectangle button using graphics
+    const graphics = this.add.graphics()
+    graphics.fillStyle(0x3b82f6, 0.85)
+    graphics.fillRoundedRect(buttonX - buttonWidth / 2, buttonY - buttonHeight / 2, buttonWidth, buttonHeight, radius)
+    graphics.lineStyle(3, endlessRecord ? 0x1e40af : 0x60a5fa, 1)
+    graphics.strokeRoundedRect(buttonX - buttonWidth / 2, buttonY - buttonHeight / 2, buttonWidth, buttonHeight, radius)
+    graphics.setInteractive(
+      new Phaser.Geom.Rectangle(buttonX - buttonWidth / 2, buttonY - buttonHeight / 2, buttonWidth, buttonHeight),
+      Phaser.Geom.Rectangle.Contains,
+    )
+    graphics.on('pointerdown', () => this.startEndless())
+
+    this.add.text(buttonX, buttonY - 12, 'Endless Gamemode', {
+      color: '#ffffff',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      fontSize: '20px',
+      fontStyle: '800',
+    }).setOrigin(0.5)
+
+    const recordText = endlessRecord ? `Personal record: ${endlessRecord.blockCount} blocks` : 'Personal record: —'
+    this.add.text(buttonX, buttonY + 16, recordText, {
+      color: '#ffffff',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      fontSize: '12px',
+    }).setOrigin(0.5)
   }
 
   private addBackground() {

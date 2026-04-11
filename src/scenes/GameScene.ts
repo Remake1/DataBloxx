@@ -4,6 +4,7 @@ import { EVENTS, GAME_HEIGHT, GAME_WIDTH, WORLD } from '../core/constants'
 import { gameEvents } from '../core/events'
 import { DEFAULT_LEVEL, getLevelById, type BlockKind, type LevelDefinition } from '../core/levels'
 import { saveLevelCompletion } from '../core/progress'
+import { saveEndlessRecord, type EndlessRecord } from '../core/endless'
 import { Background } from '../entities/Background'
 import { CraneArm } from '../entities/CraneArm'
 import { DatacenterBlock } from '../entities/DatacenterBlock'
@@ -26,13 +27,16 @@ export class GameScene extends Phaser.Scene {
   private isGameOver = false
   private blockKindIndex = 0
   private lastImpactSoundMs = 0
+  private isEndless = false
+  private endlessBlockKinds: BlockKind[] = ['server', 'cooling', 'power', 'network']
 
   constructor() {
     super('GameScene')
   }
 
-  create(data: { levelId?: number } = {}) {
-    this.level = getLevelById(data.levelId ?? DEFAULT_LEVEL.id)
+  create(data: { levelId?: number; endless?: boolean } = {}) {
+    this.isEndless = data.endless ?? false
+    this.level = this.isEndless ? DEFAULT_LEVEL : getLevelById(data.levelId ?? DEFAULT_LEVEL.id)
     this.levelStartMs = this.time.now
     this.isGameOver = false
     this.blocks = []
@@ -70,7 +74,7 @@ export class GameScene extends Phaser.Scene {
     gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
     gameEvents.emit(
       EVENTS.gameStatus,
-      `Level ${this.level.id}: place ${this.level.targetBlocks} stable blocks.`,
+      this.isEndless ? 'Endless Mode: place blocks for the highest record.' : `Level ${this.level.id}: place ${this.level.targetBlocks} stable blocks.`,
     )
   }
 
@@ -92,7 +96,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private getNextBlockKind(): BlockKind {
-    const kinds = this.level.blockKinds
+    const kinds = this.isEndless ? this.endlessBlockKinds : this.level.blockKinds
     const kind = kinds[this.blockKindIndex % kinds.length]
     this.blockKindIndex += 1
     return kind
@@ -113,7 +117,7 @@ export class GameScene extends Phaser.Scene {
     gameEvents.emit(EVENTS.gameStatus, 'Rack settling...')
 
     // Final block dropped — hide crane and prevent next preview
-    if (this.blocks.length >= this.level.targetBlocks) {
+    if (!this.isEndless && this.blocks.length >= this.level.targetBlocks) {
       this.placement.setEnabled(false)
       this.crane?.setVisible(false)
     } else {
@@ -144,7 +148,7 @@ export class GameScene extends Phaser.Scene {
       result.perfect ? 'Clean deployment. Combo boosted.' : 'Online, but latency risk increased.',
     )
 
-    if (this.scoring.getState().blocks >= this.level.targetBlocks) {
+    if (!this.isEndless && this.scoring.getState().blocks >= this.level.targetBlocks) {
       this.completeLevel()
       return
     }
@@ -239,19 +243,46 @@ export class GameScene extends Phaser.Scene {
     this.playSound(AssetKeys.levelFailed, 0.85)
     this.placement?.setEnabled(false)
     this.crane?.setVisible(false)
-    gameEvents.emit(EVENTS.gameStatus, 'Outage. Retry or return to level select.')
-    this.drawEndPanel('Deployment Failed', 'Uptime target lost.', [
-      { label: 'Retry', action: () => this.restartLevel() },
-      { label: 'Exit', action: () => this.exitToMenu() },
-    ])
+
+    if (this.isEndless) {
+      const blocksPlaced = this.scoring.getState().blocks
+      const height = this.calculateStackHeight()
+      const record: EndlessRecord = {
+        blockCount: blocksPlaced,
+        height,
+        score: this.scoring.getState().score,
+        achievedAt: new Date().toISOString(),
+      }
+      saveEndlessRecord(record)
+      gameEvents.emit(EVENTS.gameStatus, 'Tower collapsed. Record saved.')
+      this.drawEndPanel('Tower Collapse', `${blocksPlaced} blocks placed • ${Math.round(height)}px`, [
+        { label: 'Retry', action: () => this.restartLevel() },
+        { label: 'Exit', action: () => this.exitToMenu() },
+      ])
+    } else {
+      gameEvents.emit(EVENTS.gameStatus, 'Outage. Retry or return to level select.')
+      this.drawEndPanel('Deployment Failed', 'Uptime target lost.', [
+        { label: 'Retry', action: () => this.restartLevel() },
+        { label: 'Exit', action: () => this.exitToMenu() },
+      ])
+    }
   }
 
   private restartLevel() {
-    this.scene.restart({ levelId: this.level.id })
+    this.scene.restart(this.isEndless ? { endless: true } : { levelId: this.level.id })
   }
 
   private exitToMenu() {
     this.scene.start('MenuScene')
+  }
+
+  private calculateStackHeight(): number {
+    if (this.blocks.length === 0) {
+      return 0
+    }
+    const lowestY = Math.min(...this.blocks.map((b) => b.y + b.displayHeight / 2))
+    const highestY = Math.min(...this.blocks.map((b) => b.y - b.displayHeight / 2))
+    return Math.abs(lowestY - highestY)
   }
 
   private drawEndPanel(
