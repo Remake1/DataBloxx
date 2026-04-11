@@ -111,6 +111,8 @@ export class GameScene extends Phaser.Scene {
     if (this.blocks.length >= this.level.targetBlocks) {
       this.placement.setEnabled(false)
       this.crane?.setVisible(false)
+    } else {
+      this.prepareNextBlock()
     }
   }
 
@@ -142,7 +144,6 @@ export class GameScene extends Phaser.Scene {
       return
     }
 
-    this.prepareNextBlock()
   }
 
   private applyStability() {
