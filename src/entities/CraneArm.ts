@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser'
-import { AssetKeys } from '../core/assets'
+import { AssetKeys, getBlockAssetKey } from '../core/assets'
 import { BLOCK, CRANE, GAME_WIDTH } from '../core/constants'
+import type { BlockKind } from '../core/levels'
 
 export class CraneArm {
   private readonly scene: Phaser.Scene
@@ -17,7 +18,7 @@ export class CraneArm {
     this.cable = scene.add.line(0, 0, 0, 0, 0, CRANE.cableLength, 0x9bb2ad, 0.85)
     this.hook = scene.add.circle(0, 0, 9, 0xffcc66)
     this.preview = scene.add
-      .image(GAME_WIDTH / 2, CRANE.y + CRANE.cableLength + BLOCK.height / 2, AssetKeys.block)
+      .image(GAME_WIDTH / 2, CRANE.y + CRANE.cableLength + BLOCK.height / 2, AssetKeys.blockServer)
       .setDisplaySize(BLOCK.maxWidth, BLOCK.height)
       .setAlpha(0.86)
     this.beam.setScrollFactor(0)
@@ -53,7 +54,18 @@ export class CraneArm {
     this.preview.setDisplaySize(width, BLOCK.height)
   }
 
+  setPreviewTexture(kind: BlockKind) {
+    this.preview.setTexture(getBlockAssetKey(kind))
+  }
+
   setPreviewVisible(isVisible: boolean) {
+    this.preview.setVisible(isVisible)
+  }
+
+  setVisible(isVisible: boolean) {
+    this.beam.setVisible(isVisible)
+    this.cable.setVisible(isVisible)
+    this.hook.setVisible(isVisible)
     this.preview.setVisible(isVisible)
   }
 }

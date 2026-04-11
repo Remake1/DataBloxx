@@ -2,10 +2,13 @@ import * as Phaser from 'phaser'
 import { BLOCK, CRANE } from '../core/constants'
 import { CraneArm } from '../entities/CraneArm'
 import { DatacenterBlock } from '../entities/DatacenterBlock'
+import type { BlockKind } from '../core/levels'
 
 export class PlacementSystem {
   private canDrop = true
+  private locked = false
   private nextWidth = BLOCK.maxWidth
+  private nextKind: BlockKind = 'server'
   private readonly scene: Phaser.Scene
   private readonly crane: CraneArm
 
@@ -14,9 +17,11 @@ export class PlacementSystem {
     this.crane = crane
   }
 
-  setNextWidth(width: number) {
+  setNextBlock(width: number, kind: BlockKind) {
     this.nextWidth = width
+    this.nextKind = kind
     this.crane.setPreviewWidth(width)
+    this.crane.setPreviewTexture(kind)
   }
 
   tryDrop() {
@@ -28,11 +33,14 @@ export class PlacementSystem {
     this.crane.setPreviewVisible(false)
 
     const drop = this.crane.getDropPoint()
-    const block = new DatacenterBlock(this.scene, drop.x, drop.y, this.nextWidth)
+    const block = new DatacenterBlock(this.scene, drop.x, drop.y, this.nextWidth, this.nextKind)
     block.setVelocity(drop.velocityX, 0)
     block.setAngularVelocity(drop.velocityX * CRANE.releaseSpin)
 
     this.scene.time.delayedCall(CRANE.spawnDelayMs, () => {
+      if (this.locked) {
+        return
+      }
       this.canDrop = true
       this.crane.setPreviewVisible(true)
     })
@@ -42,6 +50,7 @@ export class PlacementSystem {
 
   setEnabled(enabled: boolean) {
     this.canDrop = enabled
+    this.locked = !enabled
     this.crane.setPreviewVisible(enabled)
   }
 }

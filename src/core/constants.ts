@@ -3,7 +3,7 @@ export const GAME_HEIGHT = 960
 
 export const WORLD = {
   topY: -2200,
-  floorY: 890,
+  floorY: 930,
   floorHeight: 70,
   targetX: GAME_WIDTH / 2,
   safeTiltRadians: 0.22,
@@ -17,9 +17,10 @@ export const BLOCK = {
   height: 56,
   minWidth: 104,
   maxWidth: 156,
-  restitution: 0.01,
+  floorTouchTolerance: 3,
+  restitution: 0,
   friction: 1,
-  frictionAir: 0.024,
+  frictionAir: 0.038,
   density: 0.006,
 }
 
@@ -37,4 +38,5 @@ export const EVENTS = {
   levelChanged: 'level-changed',
   gameStatus: 'game-status',
   gameReset: 'game-reset',
+  menuEntered: 'menu-entered',
 } as const

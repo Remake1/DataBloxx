@@ -35,7 +35,6 @@ export class ScoringSystem {
     this.state.blocks += 1
     this.state.combo = perfect ? this.state.combo + 1 : 0
     this.state.score += Math.round(70 + quality * 130 + this.state.combo * 35)
-    this.state.uptime = Phaser.Math.Clamp(this.state.uptime + quality * 4 - (perfect ? 0 : 8), 0, 100)
 
     return {
       perfect,
@@ -44,8 +43,12 @@ export class ScoringSystem {
     }
   }
 
-  applyInstability(penalty: number) {
-    this.state.uptime = Phaser.Math.Clamp(this.state.uptime - penalty, 0, 100)
+  setUptime(uptime: number) {
+    this.state.uptime = Phaser.Math.Clamp(uptime, 0, 100)
+  }
+
+  triggerOutage() {
+    this.state.uptime = 0
   }
 
   getState(): ScoreState {

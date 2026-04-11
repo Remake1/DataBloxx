@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser'
-import { GAME_HEIGHT, GAME_WIDTH } from '../core/constants'
+import { EVENTS, GAME_HEIGHT, GAME_WIDTH } from '../core/constants'
+import { gameEvents } from '../core/events'
 import { LEVELS, type LevelDefinition } from '../core/levels'
 import { getAllLevelCompletions } from '../core/progress'
 
@@ -9,12 +10,13 @@ export class MenuScene extends Phaser.Scene {
   }
 
   create() {
-    this.cameras.main.setBackgroundColor('#071111')
+    this.cameras.main.setBackgroundColor('#f8fafc')
     this.addBackground()
+    gameEvents.emit(EVENTS.menuEntered)
 
     this.add
       .text(GAME_WIDTH / 2, 284, 'DataBloxx', {
-        color: '#f4fbf8',
+        color: '#1e293b',
         fontFamily: 'Inter, system-ui, sans-serif',
         fontSize: '58px',
         fontStyle: '800',
@@ -24,7 +26,7 @@ export class MenuScene extends Phaser.Scene {
     this.add
       .text(GAME_WIDTH / 2, 348, 'Choose a deployment target.', {
         align: 'center',
-        color: '#9bb2ad',
+        color: '#64748b',
         fontFamily: 'Inter, system-ui, sans-serif',
         fontSize: '20px',
         wordWrap: { width: 430 },
@@ -35,7 +37,7 @@ export class MenuScene extends Phaser.Scene {
 
     this.add
       .text(GAME_WIDTH / 2, GAME_HEIGHT - 96, 'Matter.js physics via Phaser 4', {
-        color: '#55726f',
+        color: '#94a3b8',
         fontFamily: 'Inter, system-ui, sans-serif',
         fontSize: '15px',
       })
@@ -62,21 +64,21 @@ export class MenuScene extends Phaser.Scene {
       const y = startY + row * (tileHeight + gap)
       const completion = completions[String(level.id)]
 
-      const tile = this.add.rectangle(x, y, tileWidth, tileHeight, 0x102221, 0.94)
+      const tile = this.add.rectangle(x, y, tileWidth, tileHeight, 0xffffff, 0.9)
       tile.setOrigin(0)
-      tile.setStrokeStyle(2, completion ? 0x55d6be : 0x2d5551, 1)
+      tile.setStrokeStyle(3, completion ? 0x3b82f6 : 0xcbd5e1, 1)
       tile.setInteractive({ useHandCursor: true })
       tile.on('pointerdown', () => this.startGame(level))
 
       this.add.text(x + 16, y + 14, String(level.id).padStart(2, '0'), {
-        color: completion ? '#55d6be' : '#ffcc66',
+        color: completion ? '#3b82f6' : '#f59e0b',
         fontFamily: 'Inter, system-ui, sans-serif',
         fontSize: '30px',
         fontStyle: '800',
       })
 
       this.add.text(x + 70, y + 18, level.name, {
-        color: '#f4fbf8',
+        color: '#1e293b',
         fontFamily: 'Inter, system-ui, sans-serif',
         fontSize: '16px',
         fontStyle: '800',
@@ -84,13 +86,13 @@ export class MenuScene extends Phaser.Scene {
       })
 
       this.add.text(x + 16, y + 62, `${level.targetBlocks} blocks required`, {
-        color: '#9bb2ad',
+        color: '#64748b',
         fontFamily: 'Inter, system-ui, sans-serif',
         fontSize: '14px',
       })
 
       this.add.text(x + 16, y + 88, this.getCompletionText(completion), {
-        color: completion ? '#55d6be' : '#55726f',
+        color: completion ? '#3b82f6' : '#94a3b8',
         fontFamily: 'Inter, system-ui, sans-serif',
         fontSize: '13px',
       })
@@ -113,7 +115,7 @@ export class MenuScene extends Phaser.Scene {
 
   private addBackground() {
     const graphics = this.add.graphics()
-    graphics.lineStyle(1, 0x1c3533, 0.55)
+    graphics.lineStyle(1, 0xffffff, 0.8)
 
     for (let x = 0; x <= GAME_WIDTH; x += 36) {
       graphics.lineBetween(x, 0, x, GAME_HEIGHT)
@@ -123,9 +125,9 @@ export class MenuScene extends Phaser.Scene {
       graphics.lineBetween(0, y, GAME_WIDTH, y)
     }
 
-    graphics.fillStyle(0x55d6be, 0.08)
+    graphics.fillStyle(0x38bdf8, 0.15)
     graphics.fillCircle(96, 132, 170)
-    graphics.fillStyle(0xffcc66, 0.08)
+    graphics.fillStyle(0xfbbf24, 0.15)
     graphics.fillCircle(440, 684, 220)
   }
 }

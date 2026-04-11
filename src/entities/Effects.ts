@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser'
-import { AssetKeys } from '../core/assets'
+import { AssetKeys, getBlockAccentColor } from '../core/assets'
+import type { BlockKind } from '../core/levels'
 
 export class Effects {
   private readonly scene: Phaser.Scene
@@ -8,7 +9,8 @@ export class Effects {
     this.scene = scene
   }
 
-  pulse(x: number, y: number, color = 0x55d6be) {
+  pulse(x: number, y: number, kind: BlockKind = 'server', perfect = true) {
+    const color = perfect ? getBlockAccentColor(kind) : 0xffcc66
     const ring = this.scene.add.circle(x, y, 18)
     ring.setStrokeStyle(3, color, 0.9)
     this.scene.tweens.add({
@@ -21,10 +23,11 @@ export class Effects {
     })
   }
 
-  spark(x: number, y: number) {
+  spark(x: number, y: number, kind: BlockKind = 'server') {
+    const color = getBlockAccentColor(kind)
     for (let index = 0; index < 10; index += 1) {
       const particle = this.scene.add.image(x, y, AssetKeys.pixel)
-      particle.setTint(0xffcc66)
+      particle.setTint(color)
       particle.setDisplaySize(4, 4)
       this.scene.tweens.add({
         targets: particle,

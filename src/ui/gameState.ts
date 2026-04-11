@@ -4,7 +4,7 @@ import { gameEvents } from '../core/events'
 import type { LevelDefinition } from '../core/levels'
 import type { ScoreState } from '../systems/ScoringSystem'
 
-export const hudState = reactive<ScoreState & { levelId: number; targetBlocks: number; message: string }>({
+export const hudState = reactive<ScoreState & { levelId: number; targetBlocks: number; message: string; isInGame: boolean }>({
   score: 0,
   combo: 0,
   blocks: 0,
@@ -12,6 +12,7 @@ export const hudState = reactive<ScoreState & { levelId: number; targetBlocks: n
   targetBlocks: 5,
   uptime: 100,
   message: 'Tap to start deploying datacenter modules.',
+  isInGame: false,
 })
 
 gameEvents.on(EVENTS.scoreChanged, (state: ScoreState) => {
@@ -35,4 +36,9 @@ gameEvents.on(EVENTS.gameReset, () => {
   hudState.combo = 0
   hudState.blocks = 0
   hudState.uptime = 100
+  hudState.isInGame = true
+})
+
+gameEvents.on(EVENTS.menuEntered, () => {
+  hudState.isInGame = false
 })
