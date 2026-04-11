@@ -198,6 +198,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.isGameOver = true
+    this.sound.play(AssetKeys.levelComplete)
     this.placement?.setEnabled(false)
     this.crane?.setVisible(false)
     const state = this.scoring.getState()
@@ -224,6 +225,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.isGameOver = true
+    this.sound.play(AssetKeys.levelFailed)
     this.placement?.setEnabled(false)
     this.crane?.setVisible(false)
     gameEvents.emit(EVENTS.gameStatus, 'Outage. Retry or return to level select.')

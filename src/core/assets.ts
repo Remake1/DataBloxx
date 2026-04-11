@@ -8,6 +8,10 @@ export const AssetKeys = {
   blockPower: 'block-power',
   floor: 'datacenter-floor',
   pixel: 'pixel',
+  levelComplete: 'level-complete',
+  connected: 'connected',
+  levelFailed: 'level-failed',
+  fallImpact: 'fall-impact',
 } as const
 
 const BLOCK_THEME: Record<BlockKind, { bg: number; border: number; detail: number; led: number }> = {
