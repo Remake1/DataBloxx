@@ -10,6 +10,12 @@ interface ThemePalette {
   subGround: number
 }
 
+interface CloudSprite {
+  container: Phaser.GameObjects.Container
+  speed: number
+  wrapWidth: number
+}
+
 const PALETTES: Record<TerrainTheme, ThemePalette> = {
   plain: {
     farHill: 0x9ad68c,
@@ -49,12 +55,25 @@ const GROUND_DEPTH = 600
 
 export class Background {
   private readonly scene: Phaser.Scene
+  private readonly clouds: CloudSprite[] = []
 
   constructor(scene: Phaser.Scene, theme: TerrainTheme) {
     this.scene = scene
     this.drawSky()
     this.drawClouds()
     this.drawTerrain(theme)
+  }
+
+  update(deltaMs: number) {
+    const deltaSeconds = deltaMs * 0.001
+
+    for (const cloud of this.clouds) {
+      cloud.container.x += cloud.speed * deltaSeconds
+
+      if (cloud.container.x - cloud.wrapWidth > GAME_WIDTH + 70) {
+        cloud.container.x = -cloud.wrapWidth - 70
+      }
+    }
   }
 
   /* ── Sky ─────────────────────────────────────────────────────── */
@@ -82,29 +101,36 @@ export class Background {
   /* ── Clouds ──────────────────────────────────────────────────── */
 
   private drawClouds() {
-    const g = this.scene.add.graphics()
-    g.setDepth(-11)
-
     const clouds = [
-      { cx: 90, cy: HORIZON_Y - 380, scale: 1.0 },
-      { cx: 340, cy: HORIZON_Y - 450, scale: 0.7 },
-      { cx: 460, cy: HORIZON_Y - 340, scale: 0.85 },
-      { cx: 180, cy: HORIZON_Y - 540, scale: 0.6 },
+      { cx: 90, cy: HORIZON_Y - 380, scale: 1.0, speed: 9 },
+      { cx: 340, cy: HORIZON_Y - 450, scale: 0.7, speed: 13 },
+      { cx: 460, cy: HORIZON_Y - 340, scale: 0.85, speed: 7 },
+      { cx: 180, cy: HORIZON_Y - 540, scale: 0.6, speed: 16 },
     ]
 
     for (const cloud of clouds) {
-      this.drawCloud(g, cloud.cx, cloud.cy, cloud.scale)
+      this.clouds.push(this.createCloud(cloud.cx, cloud.cy, cloud.scale, cloud.speed))
     }
   }
 
-  private drawCloud(g: Phaser.GameObjects.Graphics, cx: number, cy: number, scale: number) {
-    g.fillStyle(0xffffff, 0.7)
+  private createCloud(cx: number, cy: number, scale: number, speed: number): CloudSprite {
     const r = 22 * scale
-    // Cluster of overlapping circles
-    g.fillEllipse(cx, cy, r * 3.4, r * 1.6)
-    g.fillEllipse(cx - r * 1.1, cy + r * 0.2, r * 2.2, r * 1.2)
-    g.fillEllipse(cx + r * 1.2, cy + r * 0.15, r * 2.6, r * 1.3)
-    g.fillEllipse(cx + r * 0.2, cy - r * 0.4, r * 2.0, r * 1.1)
+    const container = this.scene.add.container(cx, cy)
+    container.setDepth(-11)
+
+    const ellipses = [
+      this.scene.add.ellipse(0, 0, r * 3.4, r * 1.6, 0xffffff, 0.7),
+      this.scene.add.ellipse(-r * 1.1, r * 0.2, r * 2.2, r * 1.2, 0xffffff, 0.7),
+      this.scene.add.ellipse(r * 1.2, r * 0.15, r * 2.6, r * 1.3, 0xffffff, 0.7),
+      this.scene.add.ellipse(r * 0.2, -r * 0.4, r * 2.0, r * 1.1, 0xffffff, 0.7),
+    ]
+
+    container.add(ellipses)
+    return {
+      container,
+      speed,
+      wrapWidth: r * 3.4,
+    }
   }
 
   /* ── Terrain ─────────────────────────────────────────────────── */

@@ -16,6 +16,7 @@ import { StabilitySystem } from '../systems/StabilitySystem'
 
 export class GameScene extends Phaser.Scene {
   private blocks: DatacenterBlock[] = []
+  private background?: Background
   private crane?: CraneArm
   private effects?: Effects
   private placement?: PlacementSystem
@@ -58,7 +59,7 @@ export class GameScene extends Phaser.Scene {
     )
 
     this.addGridOverlay()
-    new Background(this, this.level.terrain)
+    this.background = new Background(this, this.level.terrain)
     this.addFoundation()
 
     this.crane = new CraneArm(this)
@@ -79,6 +80,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number) {
+    this.background?.update(delta)
+
     if (!this.crane || this.isGameOver) {
       return
     }
