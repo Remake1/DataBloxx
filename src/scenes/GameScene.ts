@@ -1,8 +1,8 @@
 import * as Phaser from 'phaser'
 import { AssetKeys } from '../core/assets'
-import { EVENTS, GAME_HEIGHT, GAME_WIDTH, WORLD } from '../core/constants'
+import { BLOCK, EVENTS, GAME_HEIGHT, GAME_WIDTH, WORLD } from '../core/constants'
 import { gameEvents } from '../core/events'
-import { DEFAULT_LEVEL, getLevelById, type LevelDefinition } from '../core/levels'
+import { DEFAULT_LEVEL, getLevelById, type BlockKind, type LevelDefinition } from '../core/levels'
 import { saveLevelCompletion } from '../core/progress'
 import { CraneArm } from '../entities/CraneArm'
 import { DatacenterBlock } from '../entities/DatacenterBlock'
@@ -23,6 +23,7 @@ export class GameScene extends Phaser.Scene {
   private level: LevelDefinition = DEFAULT_LEVEL
   private levelStartMs = 0
   private isGameOver = false
+  private blockKindIndex = 0
 
   constructor() {
     super('GameScene')
@@ -33,6 +34,7 @@ export class GameScene extends Phaser.Scene {
     this.levelStartMs = this.time.now
     this.isGameOver = false
     this.blocks = []
+    this.blockKindIndex = 0
     this.scoring.reset()
     this.cameras.main.setBackgroundColor('#071111')
     this.cameras.main.scrollY = 0
@@ -75,8 +77,16 @@ export class GameScene extends Phaser.Scene {
 
     this.crane.update(delta, this.difficulty.getCraneSpeed(this.scoring.getState().blocks))
     this.scoreSettledBlocks()
+    this.stabilizeSettledBlocks()
     this.applyStability()
     this.moveCamera()
+  }
+
+  private getNextBlockKind(): BlockKind {
+    const kinds = this.level.blockKinds
+    const kind = kinds[this.blockKindIndex % kinds.length]
+    this.blockKindIndex += 1
+    return kind
   }
 
   private dropBlock() {
@@ -90,8 +100,14 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.blocks.push(block)
-    this.effects?.spark(block.x, block.y - 22)
+    this.effects?.spark(block.x, block.y - 22, block.kind)
     gameEvents.emit(EVENTS.gameStatus, 'Rack settling...')
+
+    // Final block dropped — hide crane and prevent next preview
+    if (this.blocks.length >= this.level.targetBlocks) {
+      this.placement.setEnabled(false)
+      this.crane?.setVisible(false)
+    }
   }
 
   private scoreSettledBlocks() {
@@ -103,7 +119,7 @@ export class GameScene extends Phaser.Scene {
     const previousBlock = this.blocks[this.blocks.indexOf(block) - 1]
     const result = this.scoring.scorePlacement(block, previousBlock)
     block.markScored()
-    this.effects?.pulse(block.x, block.y, result.perfect ? 0x55d6be : 0xffcc66)
+    this.effects?.pulse(block.x, block.y, block.kind, result.perfect)
     gameEvents.emit(EVENTS.scoreChanged, result.state)
     gameEvents.emit(
       EVENTS.gameStatus,
@@ -125,14 +141,55 @@ export class GameScene extends Phaser.Scene {
       gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
     }
 
-    if (this.stability.hasFailed(this.blocks, this.scoring.getState().uptime)) {
+    // Fail if more than 2 blocks have fallen to the ground floor
+    const fallenCount = this.blocks.filter((block) => {
+      const nearFloor = block.y > WORLD.floorY - BLOCK.height * 1.5
+      const awayFromCenter = Math.abs(block.x - WORLD.targetX) > BLOCK.maxWidth * 0.8
+      return nearFloor && awayFromCenter
+    }).length
+
+    if (
+      fallenCount > 2 ||
+      this.stability.hasFailed(this.blocks, this.scoring.getState().uptime)
+    ) {
       this.failLevel()
+    }
+  }
+
+  /** Gently correct settled blocks: nudge toward center and reduce wobble */
+  private stabilizeSettledBlocks() {
+    for (const block of this.blocks) {
+      if (!block.hasScored()) {
+        continue
+      }
+
+      const body = block.body as MatterJS.BodyType
+
+      // Reduce any residual angular velocity (anti-jelly)
+      if (Math.abs(body.angularVelocity) > 0.001) {
+        this.matter.body.setAngularVelocity(body, body.angularVelocity * 0.88)
+      }
+
+      // Dampen lateral drift
+      if (Math.abs(body.velocity.x) > 0.05) {
+        this.matter.body.setVelocity(body, {
+          x: body.velocity.x * 0.90,
+          y: body.velocity.y,
+        })
+      }
+
+      // Gently nudge rotation back toward 0
+      if (Math.abs(block.rotation) > 0.005) {
+        const correctedAngle = block.rotation * 0.97
+        this.matter.body.setAngle(body, correctedAngle)
+      }
     }
   }
 
   private prepareNextBlock() {
     const width = this.difficulty.clampBlockWidth(this.difficulty.getNextBlockWidth(this.blocks.length))
-    this.placement?.setNextWidth(width)
+    const kind = this.getNextBlockKind()
+    this.placement?.setNextBlock(width, kind)
   }
 
   private completeLevel() {
@@ -142,6 +199,7 @@ export class GameScene extends Phaser.Scene {
 
     this.isGameOver = true
     this.placement?.setEnabled(false)
+    this.crane?.setVisible(false)
     const state = this.scoring.getState()
     const timeMs = Math.max(0, this.time.now - this.levelStartMs)
 
@@ -167,6 +225,7 @@ export class GameScene extends Phaser.Scene {
 
     this.isGameOver = true
     this.placement?.setEnabled(false)
+    this.crane?.setVisible(false)
     gameEvents.emit(EVENTS.gameStatus, 'Outage. Retry or return to level select.')
     this.drawEndPanel('Deployment Failed', 'Uptime target lost.', [
       { label: 'Retry', action: () => this.restartLevel() },
@@ -187,8 +246,12 @@ export class GameScene extends Phaser.Scene {
     subtitle: string,
     buttons: Array<{ label: string; action: () => void }>,
   ) {
-    const panel = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT / 2)
-    panel.setScrollFactor(0)
+    // Use camera world position for the panel so buttons remain clickable regardless of scroll
+    const cam = this.cameras.main
+    const centerWorldX = cam.scrollX + cam.width / 2
+    const centerWorldY = cam.scrollY + cam.height / 2
+
+    const panel = this.add.container(centerWorldX, centerWorldY)
     panel.setDepth(100)
 
     const backdrop = this.add.rectangle(0, 0, 380, 244, 0x071111, 0.92)
@@ -232,7 +295,10 @@ export class GameScene extends Phaser.Scene {
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true })
 
-      buttonText.on('pointerdown', button.action)
+      buttonText.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+        pointer.event.stopPropagation()
+        button.action()
+      })
       panel.add(buttonText)
     })
   }

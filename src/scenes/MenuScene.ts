@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser'
-import { GAME_HEIGHT, GAME_WIDTH } from '../core/constants'
+import { EVENTS, GAME_HEIGHT, GAME_WIDTH } from '../core/constants'
+import { gameEvents } from '../core/events'
 import { LEVELS, type LevelDefinition } from '../core/levels'
 import { getAllLevelCompletions } from '../core/progress'
 
@@ -11,6 +12,7 @@ export class MenuScene extends Phaser.Scene {
   create() {
     this.cameras.main.setBackgroundColor('#071111')
     this.addBackground()
+    gameEvents.emit(EVENTS.menuEntered)
 
     this.add
       .text(GAME_WIDTH / 2, 284, 'DataBloxx', {

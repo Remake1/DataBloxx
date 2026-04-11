@@ -17,9 +17,9 @@ export const BLOCK = {
   height: 56,
   minWidth: 104,
   maxWidth: 156,
-  restitution: 0.01,
+  restitution: 0,
   friction: 1,
-  frictionAir: 0.024,
+  frictionAir: 0.038,
   density: 0.006,
 }
 
@@ -37,4 +37,5 @@ export const EVENTS = {
   levelChanged: 'level-changed',
   gameStatus: 'game-status',
   gameReset: 'game-reset',
+  menuEntered: 'menu-entered',
 } as const
