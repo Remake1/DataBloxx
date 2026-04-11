@@ -333,4 +333,5 @@ export class Background {
     g.fillStyle(0xff3333, 1)
     g.fillCircle(195, HORIZON_Y - 14, 3)
   }
+
 }
