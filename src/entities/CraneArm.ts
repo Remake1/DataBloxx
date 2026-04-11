@@ -72,15 +72,19 @@ export class CraneArm {
     ]
 
     allElements.forEach(el => el.setScrollFactor(0))
-    this.update(0, 1)
+    this.update(0, 1, CRANE.minArcHeight)
   }
 
-  update(deltaMs: number, speed: number) {
+  update(deltaMs: number, speed: number, arcHeight: number) {
     this.speed = speed
     this.time += deltaMs * 0.001 * this.speed
 
-    const x = GAME_WIDTH / 2 + Math.sin(this.time) * CRANE.swingAmplitude
+    const swing = Math.sin(this.time)
+    const swingVelocity = Math.cos(this.time)
+    const x = GAME_WIDTH / 2 + swing * CRANE.swingAmplitude
     const y = CRANE.y
+    const arcOffsetY = (1 - swing * swing) * arcHeight
+    const previewRotation = -swingVelocity * CRANE.previewRotationAmplitude
 
     // Trolley follows sine wave
     this.trolleyMotor.setX(x)
@@ -88,7 +92,7 @@ export class CraneArm {
     this.trolleyAccent.setX(x)
 
     // Hook logic
-    const hookY = y + CRANE.cableLength
+    const hookY = y + CRANE.cableLength + arcOffsetY
 
     // The Pulley
     this.pulleyBlock.setPosition(x, hookY - 18)
@@ -113,6 +117,7 @@ export class CraneArm {
 
     // Preview at exact anchor point
     this.preview.setPosition(x, hookY + BLOCK.height / 2)
+    this.preview.setRotation(previewRotation)
   }
 
   getDropPoint() {
@@ -122,6 +127,9 @@ export class CraneArm {
       x: worldPoint.x,
       y: worldPoint.y,
       velocityX: Math.cos(this.time) * CRANE.releaseVelocity * this.speed,
+      rotation: this.preview.rotation,
+      angularVelocity:
+        Math.sin(this.time) * CRANE.previewSpinAmplitude + Math.cos(this.time) * CRANE.releaseSpin * this.speed,
     }
   }
 

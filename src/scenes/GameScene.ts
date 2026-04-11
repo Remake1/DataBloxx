@@ -79,7 +79,12 @@ export class GameScene extends Phaser.Scene {
       return
     }
 
-    this.crane.update(delta, this.difficulty.getCraneSpeed(this.scoring.getState().blocks))
+    const blocksPlaced = this.scoring.getState().blocks
+    this.crane.update(
+      delta,
+      this.difficulty.getCraneSpeed(blocksPlaced),
+      this.difficulty.getCraneArcHeight(blocksPlaced),
+    )
     this.scoreSettledBlocks()
     this.stabilizeSettledBlocks()
     this.applyStability()
@@ -165,7 +170,7 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  /** Gently correct settled blocks: nudge toward center and reduce wobble */
+  /** Lightly damp scored blocks without making the tower feel locked in place. */
   private stabilizeSettledBlocks() {
     for (const block of this.blocks) {
       if (!block.hasScored()) {
@@ -174,22 +179,19 @@ export class GameScene extends Phaser.Scene {
 
       const body = block.body as MatterJS.BodyType
 
-      // Reduce any residual angular velocity (anti-jelly)
-      if (Math.abs(body.angularVelocity) > 0.001) {
-        this.matter.body.setAngularVelocity(body, body.angularVelocity * 0.88)
+      if (Math.abs(body.angularVelocity) > 0.004) {
+        this.matter.body.setAngularVelocity(body, body.angularVelocity * 0.96)
       }
 
-      // Dampen lateral drift
-      if (Math.abs(body.velocity.x) > 0.05) {
+      if (Math.abs(body.velocity.x) > 0.08) {
         this.matter.body.setVelocity(body, {
-          x: body.velocity.x * 0.90,
+          x: body.velocity.x * 0.96,
           y: body.velocity.y,
         })
       }
 
-      // Gently nudge rotation back toward 0
-      if (Math.abs(block.rotation) > 0.005) {
-        const correctedAngle = block.rotation * 0.97
+      if (Math.abs(block.rotation) > 0.03) {
+        const correctedAngle = block.rotation * 0.995
         this.matter.body.setAngle(body, correctedAngle)
       }
     }

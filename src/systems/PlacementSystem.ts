@@ -34,8 +34,9 @@ export class PlacementSystem {
 
     const drop = this.crane.getDropPoint()
     const block = new DatacenterBlock(this.scene, drop.x, drop.y, this.nextWidth, this.nextKind)
+    block.setRotation(drop.rotation)
     block.setVelocity(drop.velocityX, 0)
-    block.setAngularVelocity(drop.velocityX * CRANE.releaseSpin)
+    block.setAngularVelocity(drop.angularVelocity)
 
     this.scene.time.delayedCall(CRANE.spawnDelayMs, () => {
       if (this.locked) {

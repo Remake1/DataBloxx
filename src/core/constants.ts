@@ -28,9 +28,15 @@ export const CRANE = {
   y: 126,
   cableLength: 124,
   swingAmplitude: 128,
+  minArcHeight: 18,
+  maxArcHeight: 50,
+  arcRampStartBlocks: 2,
+  arcRampBlocks: 12,
+  previewRotationAmplitude: 0.11,
+  previewSpinAmplitude: 0.012,
   spawnDelayMs: 520,
   releaseVelocity: 1.25,
-  releaseSpin: 0.0012,
+  releaseSpin: 0.002,
 }
 
 export const EVENTS = {
