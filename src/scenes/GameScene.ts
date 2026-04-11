@@ -2,6 +2,8 @@ import * as Phaser from 'phaser'
 import { AssetKeys } from '../core/assets'
 import { EVENTS, GAME_HEIGHT, GAME_WIDTH, WORLD } from '../core/constants'
 import { gameEvents } from '../core/events'
+import { DEFAULT_LEVEL, getLevelById, type LevelDefinition } from '../core/levels'
+import { saveLevelCompletion } from '../core/progress'
 import { CraneArm } from '../entities/CraneArm'
 import { DatacenterBlock } from '../entities/DatacenterBlock'
 import { Effects } from '../entities/Effects'
@@ -18,13 +20,17 @@ export class GameScene extends Phaser.Scene {
   private readonly scoring = new ScoringSystem()
   private readonly stability = new StabilitySystem()
   private readonly difficulty = new DifficultySystem()
+  private level: LevelDefinition = DEFAULT_LEVEL
+  private levelStartMs = 0
   private isGameOver = false
 
   constructor() {
     super('GameScene')
   }
 
-  create() {
+  create(data: { levelId?: number } = {}) {
+    this.level = getLevelById(data.levelId ?? DEFAULT_LEVEL.id)
+    this.levelStartMs = this.time.now
     this.isGameOver = false
     this.blocks = []
     this.scoring.reset()
@@ -54,8 +60,12 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-SPACE', () => this.dropBlock())
 
     gameEvents.emit(EVENTS.gameReset)
+    gameEvents.emit(EVENTS.levelChanged, this.level)
     gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
-    gameEvents.emit(EVENTS.gameStatus, 'Click, tap, or press space when the module is centered.')
+    gameEvents.emit(
+      EVENTS.gameStatus,
+      `Level ${this.level.id}: place ${this.level.targetBlocks} stable blocks.`,
+    )
   }
 
   update(_time: number, delta: number) {
@@ -63,7 +73,7 @@ export class GameScene extends Phaser.Scene {
       return
     }
 
-    this.crane.update(delta, this.difficulty.getCraneSpeed(this.blocks.length))
+    this.crane.update(delta, this.difficulty.getCraneSpeed(this.scoring.getState().blocks))
     this.scoreSettledBlocks()
     this.applyStability()
     this.moveCamera()
@@ -71,7 +81,6 @@ export class GameScene extends Phaser.Scene {
 
   private dropBlock() {
     if (this.isGameOver || !this.placement) {
-      this.scene.restart()
       return
     }
 
@@ -100,6 +109,12 @@ export class GameScene extends Phaser.Scene {
       EVENTS.gameStatus,
       result.perfect ? 'Clean deployment. Combo boosted.' : 'Online, but latency risk increased.',
     )
+
+    if (result.state.blocks >= this.level.targetBlocks) {
+      this.completeLevel()
+      return
+    }
+
     this.prepareNextBlock()
   }
 
@@ -111,7 +126,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     if (this.stability.hasFailed(this.blocks, this.scoring.getState().uptime)) {
-      this.endGame()
+      this.failLevel()
     }
   }
 
@@ -120,18 +135,116 @@ export class GameScene extends Phaser.Scene {
     this.placement?.setNextWidth(width)
   }
 
-  private endGame() {
+  private completeLevel() {
     if (this.isGameOver) {
       return
     }
 
     this.isGameOver = true
     this.placement?.setEnabled(false)
-    gameEvents.emit(EVENTS.gameStatus, 'Outage. Tap or press space to rebuild.')
-    this.time.delayedCall(420, () => {
-      this.input.once('pointerdown', () => this.scene.restart())
-      this.input.keyboard?.once('keydown-SPACE', () => this.scene.restart())
+    const state = this.scoring.getState()
+    const timeMs = Math.max(0, this.time.now - this.levelStartMs)
+
+    saveLevelCompletion({
+      levelId: this.level.id,
+      timeMs,
+      finalUptime: state.uptime,
+      completedAt: new Date().toISOString(),
     })
+
+    gameEvents.emit(EVENTS.scoreChanged, state)
+    gameEvents.emit(EVENTS.gameStatus, `Level ${this.level.id} complete.`)
+    this.drawEndPanel('Deployment Complete', this.formatResult(timeMs, state.uptime), [
+      { label: 'Retry', action: () => this.restartLevel() },
+      { label: 'Exit', action: () => this.exitToMenu() },
+    ])
+  }
+
+  private failLevel() {
+    if (this.isGameOver) {
+      return
+    }
+
+    this.isGameOver = true
+    this.placement?.setEnabled(false)
+    gameEvents.emit(EVENTS.gameStatus, 'Outage. Retry or return to level select.')
+    this.drawEndPanel('Deployment Failed', 'Uptime target lost.', [
+      { label: 'Retry', action: () => this.restartLevel() },
+      { label: 'Exit', action: () => this.exitToMenu() },
+    ])
+  }
+
+  private restartLevel() {
+    this.scene.restart({ levelId: this.level.id })
+  }
+
+  private exitToMenu() {
+    this.scene.start('MenuScene')
+  }
+
+  private drawEndPanel(
+    title: string,
+    subtitle: string,
+    buttons: Array<{ label: string; action: () => void }>,
+  ) {
+    const panel = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT / 2)
+    panel.setScrollFactor(0)
+    panel.setDepth(100)
+
+    const backdrop = this.add.rectangle(0, 0, 380, 244, 0x071111, 0.92)
+    backdrop.setStrokeStyle(2, 0x55d6be, 1)
+
+    const titleText = this.add
+      .text(0, -78, title, {
+        align: 'center',
+        color: '#f4fbf8',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '28px',
+        fontStyle: '800',
+      })
+      .setOrigin(0.5)
+
+    const subtitleText = this.add
+      .text(0, -34, subtitle, {
+        align: 'center',
+        color: '#9bb2ad',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '16px',
+      })
+      .setOrigin(0.5)
+
+    panel.add([backdrop, titleText, subtitleText])
+
+    buttons.forEach((button, index) => {
+      const x = (index - (buttons.length - 1) / 2) * 126
+      const buttonText = this.add
+        .text(x, 58, button.label, {
+          align: 'center',
+          backgroundColor: index === 0 ? '#55d6be' : '#24413f',
+          color: index === 0 ? '#071111' : '#f4fbf8',
+          fixedWidth: 112,
+          fixedHeight: 42,
+          fontFamily: 'Inter, system-ui, sans-serif',
+          fontSize: '16px',
+          fontStyle: '800',
+          padding: { top: 11 },
+        })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true })
+
+      buttonText.on('pointerdown', button.action)
+      panel.add(buttonText)
+    })
+  }
+
+  private formatResult(timeMs: number, uptime: number) {
+    return `${this.formatTime(timeMs)} / ${Math.round(uptime)}% final uptime`
+  }
+
+  private formatTime(timeMs: number) {
+    const seconds = Math.max(0, Math.round(timeMs / 1000))
+    const minutes = Math.floor(seconds / 60)
+    return `${minutes}:${String(seconds % 60).padStart(2, '0')}`
   }
 
   private moveCamera() {

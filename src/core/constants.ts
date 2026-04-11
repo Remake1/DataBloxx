@@ -34,6 +34,7 @@ export const CRANE = {
 
 export const EVENTS = {
   scoreChanged: 'score-changed',
+  levelChanged: 'level-changed',
   gameStatus: 'game-status',
   gameReset: 'game-reset',
 } as const

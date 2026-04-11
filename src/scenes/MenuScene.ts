@@ -1,5 +1,7 @@
 import * as Phaser from 'phaser'
 import { GAME_HEIGHT, GAME_WIDTH } from '../core/constants'
+import { LEVELS, type LevelDefinition } from '../core/levels'
+import { getAllLevelCompletions } from '../core/progress'
 
 export class MenuScene extends Phaser.Scene {
   constructor() {
@@ -20,7 +22,7 @@ export class MenuScene extends Phaser.Scene {
       .setOrigin(0.5)
 
     this.add
-      .text(GAME_WIDTH / 2, 348, 'Stack datacenter modules. Keep uptime high.', {
+      .text(GAME_WIDTH / 2, 348, 'Choose a deployment target.', {
         align: 'center',
         color: '#9bb2ad',
         fontFamily: 'Inter, system-ui, sans-serif',
@@ -29,24 +31,7 @@ export class MenuScene extends Phaser.Scene {
       })
       .setOrigin(0.5)
 
-    const start = this.add
-      .text(GAME_WIDTH / 2, 488, 'Tap / click / space to deploy', {
-        backgroundColor: '#55d6be',
-        color: '#071111',
-        fixedWidth: 310,
-        fixedHeight: 48,
-        fontFamily: 'Inter, system-ui, sans-serif',
-        fontSize: '18px',
-        fontStyle: '800',
-        padding: { top: 13 },
-        align: 'center',
-      })
-      .setOrigin(0.5)
-
-    start.setInteractive({ useHandCursor: true })
-    start.on('pointerdown', () => this.startGame())
-    this.input.keyboard?.once('keydown-SPACE', () => this.startGame())
-    this.input.once('pointerdown', () => this.startGame())
+    this.drawLevelGrid()
 
     this.add
       .text(GAME_WIDTH / 2, GAME_HEIGHT - 96, 'Matter.js physics via Phaser 4', {
@@ -57,8 +42,73 @@ export class MenuScene extends Phaser.Scene {
       .setOrigin(0.5)
   }
 
-  private startGame() {
-    this.scene.start('GameScene')
+  private startGame(level: LevelDefinition) {
+    this.scene.start('GameScene', { levelId: level.id })
+  }
+
+  private drawLevelGrid() {
+    const completions = getAllLevelCompletions()
+    const columns = 2
+    const tileWidth = 196
+    const tileHeight = 126
+    const gap = 18
+    const startX = GAME_WIDTH / 2 - tileWidth - gap / 2
+    const startY = 420
+
+    LEVELS.forEach((level, index) => {
+      const column = index % columns
+      const row = Math.floor(index / columns)
+      const x = startX + column * (tileWidth + gap)
+      const y = startY + row * (tileHeight + gap)
+      const completion = completions[String(level.id)]
+
+      const tile = this.add.rectangle(x, y, tileWidth, tileHeight, 0x102221, 0.94)
+      tile.setOrigin(0)
+      tile.setStrokeStyle(2, completion ? 0x55d6be : 0x2d5551, 1)
+      tile.setInteractive({ useHandCursor: true })
+      tile.on('pointerdown', () => this.startGame(level))
+
+      this.add.text(x + 16, y + 14, String(level.id).padStart(2, '0'), {
+        color: completion ? '#55d6be' : '#ffcc66',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '30px',
+        fontStyle: '800',
+      })
+
+      this.add.text(x + 70, y + 18, level.name, {
+        color: '#f4fbf8',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '16px',
+        fontStyle: '800',
+        wordWrap: { width: 106 },
+      })
+
+      this.add.text(x + 16, y + 62, `${level.targetBlocks} blocks required`, {
+        color: '#9bb2ad',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+      })
+
+      this.add.text(x + 16, y + 88, this.getCompletionText(completion), {
+        color: completion ? '#55d6be' : '#55726f',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '13px',
+      })
+    })
+  }
+
+  private getCompletionText(completion: ReturnType<typeof getAllLevelCompletions>[string]) {
+    if (!completion) {
+      return 'Not completed'
+    }
+
+    return `${this.formatTime(completion.timeMs)} / ${Math.round(completion.finalUptime)}% uptime`
+  }
+
+  private formatTime(timeMs: number) {
+    const seconds = Math.max(0, Math.round(timeMs / 1000))
+    const minutes = Math.floor(seconds / 60)
+    return `${minutes}:${String(seconds % 60).padStart(2, '0')}`
   }
 
   private addBackground() {
