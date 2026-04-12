@@ -45,8 +45,8 @@ input {
 .game-shell {
   display: grid;
   background:
-    radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.3), transparent 28rem),
-    linear-gradient(180deg, #38bdf8 0%, #0284c7 60%, #0369a1 100%);
+    radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.1), transparent 28rem),
+    linear-gradient(180deg, #9ca3af 0%, #6b7280 60%, #4b5563 100%);
 }
 
 .game-stage {
