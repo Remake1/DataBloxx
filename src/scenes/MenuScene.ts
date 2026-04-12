@@ -84,7 +84,7 @@ export class MenuScene extends Phaser.Scene {
       .setOrigin(0.5)
   }
 
-  update(time: number, delta: number) {
+  update(_time: number, delta: number) {
     const wrapBuffer = 200
 
     this.clouds.forEach((cloud, index) => {
