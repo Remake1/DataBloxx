@@ -173,18 +173,18 @@ export class Background {
     const container = this.scene.add.container(cx, cy)
     container.setDepth(-11)
 
-    const ellipses = [
-      this.scene.add.ellipse(0, 0, r * 3.4, r * 1.6, 0xffffff, 0.7),
-      this.scene.add.ellipse(-r * 1.1, r * 0.2, r * 2.2, r * 1.2, 0xffffff, 0.7),
-      this.scene.add.ellipse(r * 1.2, r * 0.15, r * 2.6, r * 1.3, 0xffffff, 0.7),
-      this.scene.add.ellipse(r * 0.2, -r * 0.4, r * 2.0, r * 1.1, 0xffffff, 0.7),
+    const blocks = [
+      this.scene.add.rectangle(0, 0, r * 4.0, r * 1.5, 0xffffff, 1),
+      this.scene.add.rectangle(-r * 1.0, r * 0.5, r * 2.0, r * 1.0, 0xffffff, 1),
+      this.scene.add.rectangle(r * 1.0, r * 0.5, r * 2.5, r * 1.5, 0xffffff, 1),
+      this.scene.add.rectangle(0, -r * 0.5, r * 2.0, r * 1.0, 0xffffff, 1),
     ]
 
-    container.add(ellipses)
+    container.add(blocks)
     return {
       container,
       speed,
-      wrapWidth: r * 3.4,
+      wrapWidth: r * 4.0,
     }
   }
 
@@ -259,13 +259,14 @@ export class Background {
     g.beginPath()
     g.moveTo(-40, GAME_HEIGHT + GROUND_DEPTH)
 
-    for (let x = -40; x <= GAME_WIDTH + 40; x += 4) {
+    for (let x = -40; x <= GAME_WIDTH + 40; x += 16) {
       const y =
         baseY +
-        Math.sin(x * frequency + seed) * amplitude +
+        Math.floor((Math.sin(x * frequency + seed) * amplitude +
         Math.sin(x * frequency * 2.3 + seed * 1.7) * amplitude * 0.4 +
-        Math.sin(x * frequency * 0.5 + seed * 3.1) * amplitude * 0.6
+        Math.sin(x * frequency * 0.5 + seed * 3.1) * amplitude * 0.6) / 8) * 8
       g.lineTo(x, y)
+      g.lineTo(x + 16, y)
     }
 
     g.lineTo(GAME_WIDTH + 40, GAME_HEIGHT + GROUND_DEPTH)
