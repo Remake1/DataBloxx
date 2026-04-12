@@ -5,16 +5,40 @@ import { createGame } from './core/gameConfig'
 
 const gameRoot = ref<HTMLDivElement | null>(null)
 let game: Phaser.Game | null = null
+let isUnmounted = false
 
-onMounted(() => {
-  if (!gameRoot.value) {
+const pixelFont = '"Press Start 2P"'
+
+async function waitForPixelFont() {
+  if (!('fonts' in document)) {
     return
   }
 
-  game = createGame(gameRoot.value)
+  await document.fonts.load(`56px ${pixelFont}`)
+  await document.fonts.ready
+}
+
+onMounted(async () => {
+  const root = gameRoot.value
+  if (!root) {
+    return
+  }
+
+  try {
+    await waitForPixelFont()
+  } catch (error) {
+    console.warn('Pixel font failed to load before game start.', error)
+  }
+
+  if (isUnmounted || game) {
+    return
+  }
+
+  game = createGame(root)
 })
 
 onBeforeUnmount(() => {
+  isUnmounted = true
   game?.destroy(true)
   game = null
 })
