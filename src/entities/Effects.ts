@@ -33,9 +33,8 @@ export class Effects {
         x: x + Math.cos(angle) * distance,
         y: y + Math.sin(angle) * distance + 40,
         alpha: { from: 1, to: 0 },
-        rotation: Phaser.Math.Between(-4, 4),
-        duration: Phaser.Math.Between(500, 900),
-        ease: 'Quad.Out',
+        duration: Phaser.Math.Between(250, 450),
+        ease: 'Linear',
         onComplete: () => particle.destroy(),
       })
     }
@@ -52,8 +51,8 @@ export class Effects {
         x: x + Phaser.Math.Between(-46, 46),
         y: y + Phaser.Math.Between(-34, 12),
         alpha: 0,
-        duration: 360,
-        ease: 'Quad.Out',
+        duration: 200,
+        ease: 'Linear',
         onComplete: () => particle.destroy(),
       })
     }
@@ -82,9 +81,8 @@ export class Effects {
       this.scene.tweens.add({
         targets: particle,
         alpha: { from: 1, to: 0 },
-        rotation: Phaser.Math.Between(-1, 1),
-        duration: Phaser.Math.Between(500, 1200),
-        ease: 'Sine.Out',
+        duration: Phaser.Math.Between(150, 400),
+        ease: 'Linear',
         onComplete: () => particle.destroy(),
       })
     }
