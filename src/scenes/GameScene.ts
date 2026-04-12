@@ -37,7 +37,7 @@ export class GameScene extends Phaser.Scene {
 
   create(data: { levelId?: number; endless?: boolean } = {}) {
     this.isEndless = data.endless ?? false
-    this.level = this.isEndless ? DEFAULT_LEVEL : getLevelById(data.levelId ?? DEFAULT_LEVEL.id)
+    this.level = this.isEndless ? { ...DEFAULT_LEVEL, terrain: 'chicago' } : getLevelById(data.levelId ?? DEFAULT_LEVEL.id)
     this.levelStartMs = this.time.now
     this.isGameOver = false
     this.blocks = []

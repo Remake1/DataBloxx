@@ -1,5 +1,5 @@
 export type BlockKind = 'server' | 'cooling' | 'power' | 'network'
-export type TerrainTheme = 'plain' | 'forest' | 'desert' | 'city'
+export type TerrainTheme = 'plain' | 'forest' | 'desert' | 'city' | 'polar' | 'magma' | 'harbor' | 'chicago'
 
 export interface LevelDefinition {
   id: number
@@ -22,10 +22,10 @@ export const LEVELS: LevelDefinition[] = [
   { id: 3, name: 'Power Row', targetBlocks: 12, blockKinds: ['server', 'cooling', 'power'], terrain: 'desert' },
   { id: 4, name: 'Network Spine', targetBlocks: 16, blockKinds: ['server', 'cooling', 'power', 'network'], terrain: 'city' },
   { id: 5, name: 'Regional Core', targetBlocks: 20, blockKinds: ['server', 'cooling', 'power', 'network'], terrain: 'forest' },
-  { id: 6, name: 'Polar Cache', targetBlocks: 23, blockKinds: ['cooling', 'server', 'network', 'power'], terrain: 'plain' },
-  { id: 7, name: 'Magma Backup', targetBlocks: 26, blockKinds: ['power', 'cooling', 'server', 'network'], terrain: 'desert' },
-  { id: 8, name: 'Harbor Exchange', targetBlocks: 30, blockKinds: ['network', 'server', 'cooling', 'power'], terrain: 'city' },
-  { id: 9, name: 'Orbital Region', targetBlocks: 34, blockKinds: ['server', 'network', 'power', 'cooling'], terrain: 'forest' },
+  { id: 6, name: 'Polar Cache', targetBlocks: 23, blockKinds: ['cooling', 'server', 'network', 'power'], terrain: 'polar' },
+  { id: 7, name: 'Magma Backup', targetBlocks: 26, blockKinds: ['power', 'cooling', 'server', 'network'], terrain: 'magma' },
+  { id: 8, name: 'Harbor Exchange', targetBlocks: 30, blockKinds: ['network', 'server', 'cooling', 'power'], terrain: 'harbor' },
+  { id: 9, name: 'Chicago Node', targetBlocks: 34, blockKinds: ['server', 'network', 'power', 'cooling'], terrain: 'chicago' },
 ]
 
 export const DEFAULT_LEVEL = LEVELS[0]
