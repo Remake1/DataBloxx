@@ -9,7 +9,7 @@ export class Effects {
     this.scene = scene
   }
 
-  pulse(x: number, y: number, kind: BlockKind = 'server', perfect = true) {
+  pulse(x: number, y: number, _kind: BlockKind = 'server', perfect = true) {
     const color = 0xffcc00 // Gold pixel dust
     const particleCount = perfect ? 24 : 12
     

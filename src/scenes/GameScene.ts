@@ -158,6 +158,13 @@ export class GameScene extends Phaser.Scene {
   }
 
   private applyStability() {
+    if (this.hasFallingBlockBelowViewFailLine()) {
+      this.scoring.triggerOutage()
+      gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
+      this.failLevel()
+      return
+    }
+
     if (this.stability.countBlocksTouchingFloor(this.blocks) >= 2) {
       this.scoring.triggerOutage()
       gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
@@ -174,6 +181,19 @@ export class GameScene extends Phaser.Scene {
     if (this.stability.hasFailed(this.blocks, this.scoring.getState().uptime)) {
       this.failLevel()
     }
+  }
+
+  private hasFallingBlockBelowViewFailLine() {
+    const failLineY = this.cameras.main.scrollY + this.cameras.main.height + WORLD.belowViewFailLineOffset
+
+    return this.blocks.some((block) => {
+      if (block.getBounds().bottom < failLineY) {
+        return false
+      }
+
+      const body = block.body as MatterJS.BodyType
+      return !block.hasScored() || body.velocity.y > 0.45
+    })
   }
 
   /** Lightly damp scored blocks without making the tower feel locked in place. */

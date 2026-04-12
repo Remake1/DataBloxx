@@ -106,7 +106,6 @@ export class MenuScene extends Phaser.Scene {
     const buttonHeight = 70
     const buttonX = GAME_WIDTH / 2
     const buttonY = GAME_HEIGHT - 132
-    const radius = 20
 
     const graphics = this.add.graphics()
     graphics.fillStyle(0x000000, 1)
