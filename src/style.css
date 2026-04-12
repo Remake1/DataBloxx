@@ -84,78 +84,78 @@ input {
     max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
 }
 
+.hud__top-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+
 .hud__bar {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--panel);
-  border: 4px solid var(--line);
-  border-radius: 0;
-  padding: 8px 12px;
-  box-shadow: 4px 4px 0px var(--shadow);
+  align-items: stretch;
+  gap: 16px;
+  width: 100%;
+}
+
+.hud__combo {
+  font-family: inherit;
+  font-size: 32px;
+  color: #cca300;
+  text-shadow: 4px 4px 0px #000000;
+  margin-left: 8px;
+  margin-top: 4px;
+  animation: pulseCombo 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes pulseCombo {
+  from { transform: scale(1) rotate(-3deg); }
+  to { transform: scale(1.1) rotate(0deg); }
 }
 
 .hud-card {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
-  padding: 2px 8px;
-  min-width: 0;
+  background: #2a3d5e;
+  border: 4px solid #000000;
+  outline: 2px solid #ffffff;
+  outline-offset: -6px;
+  padding: 12px 6px;
+  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.5);
+  container-type: inline-size;
 }
 
 .hud-card__label {
-  color: var(--text);
-  font-size: 8px;
-  line-height: 1.5;
-  letter-spacing: 0;
+  font-size: clamp(10px, 12cqw, 14px);
+  color: #ffcc00;
   text-transform: uppercase;
+  margin-bottom: 4px;
   white-space: nowrap;
 }
 
 .hud-card__value {
-  color: var(--text);
-  font-size: 10px;
-  line-height: 1.5;
-  font-weight: 400;
-  letter-spacing: 0;
+  font-size: clamp(14px, 18cqw, 24px);
+  color: #ffffff;
   white-space: nowrap;
 }
 
-/* ── Uptime (inline pill) ───────────────────────────────────── */
-
-.uptime {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: auto;
-  padding: 2px 8px;
-  min-width: 0;
-  flex: 1 1 0;
-  max-width: 160px;
-}
-
-.uptime .hud-card__label {
-  flex-shrink: 0;
-}
-
 .uptime__track {
-  flex: 1 1 0;
-  height: 10px;
+  width: 80%;
+  max-width: 100px;
+  height: 6px;
+  margin-bottom: 4px;
   overflow: hidden;
-  border-radius: 0;
-  background: #dbdbdb;
-  border: 2px solid var(--line);
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid #ffffff;
 }
 
 .uptime__bar {
   height: 100%;
-  border-radius: 0;
-  background: var(--accent);
-}
-
-.uptime .hud-card__value {
-  flex-shrink: 0;
-  font-size: 13px;
+  background: #ffcc00;
 }
 
 .hud__bottom_line {
