@@ -152,19 +152,32 @@ export class Background {
   /* ── Clouds ──────────────────────────────────────────────────── */
 
   private drawClouds(theme: TerrainTheme) {
-    if (['chicago', 'magma', 'harbor'].includes(theme)) {
+    if (['magma', 'harbor'].includes(theme)) {
       return
     }
 
-    const clouds = [
+    // Generate clouds at multiple height levels
+    const baseClouds = [
       { cx: 90, cy: HORIZON_Y - 380, scale: 1.0, speed: 9 },
       { cx: 340, cy: HORIZON_Y - 450, scale: 0.7, speed: 13 },
       { cx: 460, cy: HORIZON_Y - 340, scale: 0.85, speed: 7 },
       { cx: 180, cy: HORIZON_Y - 540, scale: 0.6, speed: 16 },
     ]
 
-    for (const cloud of clouds) {
-      this.clouds.push(this.createCloud(cloud.cx, cloud.cy, cloud.scale, cloud.speed))
+    // Add clouds at higher levels (lower y values) with horizontal variation
+    const heightStep = 400
+    const maxLevels = 10 // Generate up to 10 levels above
+
+    for (let level = 0; level <= maxLevels; level++) {
+      const yOffset = level * heightStep
+      const xOffset = (level * 150) % (GAME_WIDTH + 200) // Vary x positions per level
+      for (const cloud of baseClouds) {
+        const cx = (cloud.cx + xOffset) % (GAME_WIDTH + 200) - 100 // Wrap around screen
+        const cy = cloud.cy - yOffset
+        if (cy > WORLD.topY) { // Don't generate above world top
+          this.clouds.push(this.createCloud(cx, cy, cloud.scale, cloud.speed))
+        }
+      }
     }
   }
 

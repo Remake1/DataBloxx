@@ -26,6 +26,10 @@ export class DatacenterBlock extends Phaser.Physics.Matter.Sprite {
       restitution: BLOCK.restitution,
     })
     this.setOrigin(0.5)
+    this.setDepth(10)
+    this.setAlpha(1)
+    this.setBlendMode(Phaser.BlendModes.NORMAL)
+    this.texture.setFilter(Phaser.Textures.FilterMode.NEAREST)
   }
 
   markScored() {
