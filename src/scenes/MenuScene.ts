@@ -233,11 +233,13 @@ export class MenuScene extends Phaser.Scene {
       }).setOrigin(0.5)
 
       if (completion) {
-        let starsCount = 1
-        if (completion.finalUptime >= 90) {
+        let starsCount = 0
+        if (completion.finalUptime >= 95) {
           starsCount = 3
-        } else if (completion.finalUptime >= 75) {
+        } else if (completion.finalUptime >= 87) {
           starsCount = 2
+        } else if (completion.finalUptime >= 75) {
+          starsCount = 1
         }
 
         const starsText = '★'.repeat(starsCount) + '☆'.repeat(3 - starsCount)

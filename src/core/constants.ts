@@ -20,14 +20,15 @@ export const BLOCK = {
   maxWidth: 156,
   floorTouchTolerance: 3,
   restitution: 0,
-  friction: 1.4,
-  frictionStatic: 2.2,
-  frictionAir: 0.045,
-  density: 0.012,
+  friction: 1.8,
+  frictionStatic: 3.2,
+  frictionAir: 0.075,
+  density: 0.018,
+  slop: 0.015,
   placementLeanStartRatio: 0.08,
   placementDangerOverhangRatio: 0.45,
-  placementLeanAngularVelocity: 0.028,
-  placementLeanHorizontalVelocity: 0.28,
+  placementLeanAngularVelocity: 0.018,
+  placementLeanHorizontalVelocity: 0.18,
   completionSettleDelayMs: 650,
 };
 
@@ -43,7 +44,7 @@ export const CRANE = {
   previewSpinAmplitude: 0.012,
   spawnDelayMs: 520,
   releaseVelocity: 1.25,
-  releaseDropVelocity: 7,
+  releaseDropVelocity: 10.25,
   releaseSpin: 0.002,
 };
 

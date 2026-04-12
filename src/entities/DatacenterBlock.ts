@@ -24,6 +24,7 @@ export class DatacenterBlock extends Phaser.Physics.Matter.Sprite {
       frictionStatic: BLOCK.frictionStatic,
       frictionAir: BLOCK.frictionAir,
       restitution: BLOCK.restitution,
+      slop: BLOCK.slop,
     })
     this.setOrigin(0.5)
     this.setDepth(10)

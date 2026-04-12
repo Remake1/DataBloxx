@@ -328,7 +328,7 @@ export class GameScene extends Phaser.Scene {
     })
   }
 
-  /** Lightly damp scored blocks without making the tower feel locked in place. */
+  /** Dampen scored blocks so the tower feels heavy while bad overhangs can still fail. */
   private stabilizeSettledBlocks() {
     for (const block of this.blocks) {
       if (!block.hasScored()) {
@@ -338,12 +338,12 @@ export class GameScene extends Phaser.Scene {
       const body = block.body as MatterJS.BodyType
 
       if (Math.abs(body.angularVelocity) > 0.004) {
-        this.matter.body.setAngularVelocity(body, body.angularVelocity * 0.96)
+        this.matter.body.setAngularVelocity(body, body.angularVelocity * 0.88)
       }
 
       if (Math.abs(body.velocity.x) > 0.04) {
         this.matter.body.setVelocity(body, {
-          x: body.velocity.x * 0.96,
+          x: body.velocity.x * 0.9,
           y: body.velocity.y,
         })
       }
