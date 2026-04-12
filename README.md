@@ -3,7 +3,7 @@
 DataBloxx is a small web game starter inspired by the tower-building feel of
 City/Tower Bloxx, rebranded around stacking datacenter modules.
 Can be played online by following this [link](https://data-bloxx.vercel.app/).
-To install locally follow set-up instructions below
+To install locally, follow the set-up instructions below.
 
 ## Stack
 
