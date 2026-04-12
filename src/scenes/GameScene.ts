@@ -92,6 +92,10 @@ export class GameScene extends Phaser.Scene {
       this.difficulty.getCraneSpeed(blocksPlaced),
       this.difficulty.getCraneArcHeight(blocksPlaced),
     )
+    this.failFastCollapses()
+    if (this.isGameOver) {
+      return
+    }
     this.scoreSettledBlocks()
     this.stabilizeSettledBlocks()
     this.dampenBlocksBelowView()
@@ -165,21 +169,20 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  private failFastCollapses() {
+    if (
+      this.hasDroppedBlockBelowViewFailLine()
+      || this.hasDroppedBlockTouchedFloor()
+      || this.hasScoredBlockCollapsedBelowView()
+      || this.hasScoredUpperBlockTouchedFloor()
+    ) {
+      this.scoring.triggerOutage()
+      gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
+      this.failLevel()
+    }
+  }
+
   private applyStability() {
-    if (this.hasFallingBlockBelowViewFailLine()) {
-      this.scoring.triggerOutage()
-      gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
-      this.failLevel()
-      return
-    }
-
-    if (this.stability.countBlocksTouchingFloor(this.blocks) >= 2) {
-      this.scoring.triggerOutage()
-      gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
-      this.failLevel()
-      return
-    }
-
     const uptime = this.stability.getUptime(this.blocks)
     if (Math.abs(uptime - this.scoring.getState().uptime) > 0.05) {
       this.scoring.setUptime(uptime)
@@ -191,16 +194,53 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private hasFallingBlockBelowViewFailLine() {
+  private hasDroppedBlockBelowViewFailLine() {
     const failLineY = this.cameras.main.scrollY + this.cameras.main.height + WORLD.belowViewFailLineOffset
 
     return this.blocks.some((block) => {
-      if (block.getBounds().bottom < failLineY) {
+      if (block.hasScored() || block.getBounds().bottom < failLineY) {
         return false
       }
 
       const body = block.body as MatterJS.BodyType
-      return !block.hasScored() || body.velocity.y > 0.45
+      return body.velocity.y > -0.1
+    })
+  }
+
+  private hasDroppedBlockTouchedFloor() {
+    const floorTopY = WORLD.floorY - WORLD.floorHeight / 2
+
+    return this.blocks.some((block, index) => {
+      if (index === 0 || block.hasScored()) {
+        return false
+      }
+
+      return block.getBounds().bottom >= floorTopY - BLOCK.floorTouchTolerance
+    })
+  }
+
+  private hasScoredBlockCollapsedBelowView() {
+    const failLineY = this.cameras.main.scrollY + this.cameras.main.height + WORLD.belowViewFailLineOffset
+
+    return this.blocks.some((block, index) => {
+      if (index === 0 || !block.hasScored() || block.getBounds().bottom < failLineY) {
+        return false
+      }
+
+      const body = block.body as MatterJS.BodyType
+      return body.velocity.y > 0.55 || Math.abs(body.angularVelocity) > 0.06
+    })
+  }
+
+  private hasScoredUpperBlockTouchedFloor() {
+    const floorTopY = WORLD.floorY - WORLD.floorHeight / 2
+
+    return this.blocks.some((block, index) => {
+      if (index === 0 || !block.hasScored()) {
+        return false
+      }
+
+      return block.getBounds().bottom >= floorTopY - BLOCK.floorTouchTolerance
     })
   }
 

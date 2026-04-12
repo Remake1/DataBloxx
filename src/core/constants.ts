@@ -9,8 +9,8 @@ export const WORLD = {
   safeTiltRadians: 0.22,
   offscreenY: GAME_HEIGHT + 160,
   belowViewFailLineOffset: 100,
-  cameraFollowStartLine: 620,
-  cameraFollowEndLine: 820,
+  cameraFollowStartLine: 520,
+  cameraFollowEndLine: 700,
   cameraFollowRampBlocks: 18,
 };
 
