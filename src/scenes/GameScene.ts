@@ -431,7 +431,7 @@ export class GameScene extends Phaser.Scene {
       ])
     } else {
       gameEvents.emit(EVENTS.gameStatus, 'Outage. Retry or return to level select.')
-      this.drawEndPanel('Deployment Failed', `Score: ${this.scoring.getState().score}`, [
+      this.drawEndPanel('Server is down', `Score: ${this.scoring.getState().score}`, [
         { label: 'Retry', action: () => this.restartLevel() },
         { label: 'Exit', action: () => this.exitToMenu() },
       ])
@@ -460,7 +460,6 @@ export class GameScene extends Phaser.Scene {
     subtitle: string,
     buttons: Array<{ label: string; action: () => void }>,
   ) {
-    // Use camera world position for the panel so buttons remain clickable regardless of scroll
     const cam = this.cameras.main
     const centerWorldX = cam.scrollX + cam.width / 2
     const centerWorldY = cam.scrollY + cam.height / 2
@@ -468,52 +467,47 @@ export class GameScene extends Phaser.Scene {
     const panel = this.add.container(centerWorldX, centerWorldY)
     panel.setDepth(100)
 
-    const backdrop = this.add.rectangle(0, 0, 380, 244, 0xffffff, 0.95)
-    backdrop.setStrokeStyle(4, 0x3b82f6, 1)
+    const shadow = this.add.rectangle(8, 8, 380, 244, 0x000000, 0.4)
+    const backdrop = this.add.rectangle(0, 0, 380, 244, 0xffffff, 1)
+    backdrop.setStrokeStyle(6, 0x000000, 1)
 
-    const titleText = this.add
-      .text(0, -78, title, {
-        align: 'center',
-        color: '#1e293b',
-        fontFamily: '"Press Start 2P", system-ui, sans-serif',
-        fontSize: '18px',
-        fontStyle: 'normal',
-      })
-      .setOrigin(0.5)
+    const isFail = title.toLowerCase().includes('down') || title.toLowerCase().includes('failed') || title.toLowerCase().includes('collapse')
+    const titleColor = isFail ? '#ff0000' : '#00cc00'
 
-    const subtitleText = this.add
-      .text(0, -34, subtitle, {
-        align: 'center',
-        color: '#64748b',
-        fontFamily: '"Press Start 2P", system-ui, sans-serif',
-        fontSize: '10px',
-      })
-      .setOrigin(0.5)
+    const titleTextShadow = this.add.text(3, -75, title, {
+        align: 'center', color: '#000000', fontFamily: '"Press Start 2P", system-ui, sans-serif', fontSize: '18px'
+    }).setOrigin(0.5)
 
-    panel.add([backdrop, titleText, subtitleText])
+    const titleText = this.add.text(0, -78, title, {
+        align: 'center', color: titleColor, fontFamily: '"Press Start 2P", system-ui, sans-serif', fontSize: '18px'
+    }).setOrigin(0.5)
+
+    const subtitleText = this.add.text(0, -34, subtitle, {
+        align: 'center', color: '#000000', fontFamily: '"Press Start 2P", system-ui, sans-serif', fontSize: '11px', lineSpacing: 6
+    }).setOrigin(0.5)
+
+    panel.add([shadow, backdrop, titleTextShadow, titleText, subtitleText])
 
     buttons.forEach((button, index) => {
-      const x = (index - (buttons.length - 1) / 2) * 126
-      const buttonText = this.add
-        .text(x, 58, button.label, {
-          align: 'center',
-          backgroundColor: index === 0 ? '#ffcc00' : '#e2e8f0',
-          color: index === 0 ? '#000000' : '#000000',
-          fixedWidth: 120,
-          fixedHeight: 42,
-          fontFamily: '"Press Start 2P", system-ui, sans-serif',
-          fontSize: '12px',
-          fontStyle: 'normal',
-          padding: { top: 13 },
-        })
-        .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true })
+      const x = (index - (buttons.length - 1) / 2) * 140
+      
+      const btnShadow = this.add.rectangle(x + 4, 58 + 4, 120, 46, 0x000000, 0.4)
+      const btnBg = this.add.rectangle(x, 58, 120, 46, index === 0 ? 0xffea00 : 0xe2e8f0, 1)
+      btnBg.setStrokeStyle(4, 0x000000, 1)
 
-      buttonText.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      const buttonText = this.add.text(x, 58, button.label, {
+          align: 'center', color: '#000000', fontFamily: '"Press Start 2P", system-ui, sans-serif', fontSize: '12px'
+      }).setOrigin(0.5)
+
+      const interactiveZone = this.add.zone(x, 58, 120, 46).setInteractive({ useHandCursor: true })
+      interactiveZone.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
         pointer.event.stopPropagation()
         button.action()
       })
-      panel.add(buttonText)
+      interactiveZone.on('pointerover', () => btnBg.setFillStyle(0xffffff))
+      interactiveZone.on('pointerout', () => btnBg.setFillStyle(index === 0 ? 0xffea00 : 0xe2e8f0))
+
+      panel.add([btnShadow, btnBg, buttonText, interactiveZone])
     })
   }
 
