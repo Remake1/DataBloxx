@@ -8,6 +8,7 @@ export const WORLD = {
   targetX: GAME_WIDTH / 2,
   safeTiltRadians: 0.22,
   offscreenY: GAME_HEIGHT + 160,
+  belowViewFailLineOffset: 100,
   cameraFollowStartLine: 620,
   cameraFollowEndLine: 820,
   cameraFollowRampBlocks: 18,
@@ -37,7 +38,7 @@ export const CRANE = {
   previewSpinAmplitude: 0.012,
   spawnDelayMs: 520,
   releaseVelocity: 1.25,
-  releaseDropVelocity: 3.2,
+  releaseDropVelocity: 7,
   releaseSpin: 0.002,
 };
 

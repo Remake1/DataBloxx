@@ -9,18 +9,28 @@ export class Effects {
     this.scene = scene
   }
 
-  pulse(x: number, y: number, kind: BlockKind = 'server', perfect = true) {
-    const color = perfect ? getBlockAccentColor(kind) : 0xffcc66
-    const ring = this.scene.add.circle(x, y, 18)
-    ring.setStrokeStyle(3, color, 0.9)
-    this.scene.tweens.add({
-      targets: ring,
-      alpha: 0,
-      scale: 2.6,
-      duration: 420,
-      ease: 'Cubic.Out',
-      onComplete: () => ring.destroy(),
-    })
+  pulse(x: number, y: number, _kind: BlockKind = 'server', perfect = true) {
+    const color = 0xffcc00 // Gold pixel dust
+    const particleCount = perfect ? 24 : 12
+    
+    for (let i = 0; i < particleCount; i++) {
+      const particleSize = Phaser.Math.Between(4, 8)
+      const particle = this.scene.add.rectangle(x, y, particleSize, particleSize, color)
+      
+      const angle = Phaser.Math.Between(0, 360) * (Math.PI / 180)
+      const distance = Phaser.Math.Between(20, 110)
+      
+      this.scene.tweens.add({
+        targets: particle,
+        x: x + Math.cos(angle) * distance,
+        y: y + Math.sin(angle) * distance + 40,
+        alpha: { from: 1, to: 0 },
+        rotation: Phaser.Math.Between(-4, 4),
+        duration: Phaser.Math.Between(500, 900),
+        ease: 'Quad.Out',
+        onComplete: () => particle.destroy(),
+      })
+    }
   }
 
   spark(x: number, y: number, kind: BlockKind = 'server') {

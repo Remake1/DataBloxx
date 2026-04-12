@@ -158,6 +158,13 @@ export class GameScene extends Phaser.Scene {
   }
 
   private applyStability() {
+    if (this.hasFallingBlockBelowViewFailLine()) {
+      this.scoring.triggerOutage()
+      gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
+      this.failLevel()
+      return
+    }
+
     if (this.stability.countBlocksTouchingFloor(this.blocks) >= 2) {
       this.scoring.triggerOutage()
       gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
@@ -174,6 +181,19 @@ export class GameScene extends Phaser.Scene {
     if (this.stability.hasFailed(this.blocks, this.scoring.getState().uptime)) {
       this.failLevel()
     }
+  }
+
+  private hasFallingBlockBelowViewFailLine() {
+    const failLineY = this.cameras.main.scrollY + this.cameras.main.height + WORLD.belowViewFailLineOffset
+
+    return this.blocks.some((block) => {
+      if (block.getBounds().bottom < failLineY) {
+        return false
+      }
+
+      const body = block.body as MatterJS.BodyType
+      return !block.hasScored() || body.velocity.y > 0.45
+    })
   }
 
   /** Lightly damp scored blocks without making the tower feel locked in place. */
@@ -327,9 +347,9 @@ export class GameScene extends Phaser.Scene {
       .text(0, -78, title, {
         align: 'center',
         color: '#1e293b',
-        fontFamily: 'Inter, system-ui, sans-serif',
-        fontSize: '28px',
-        fontStyle: '800',
+        fontFamily: '"Press Start 2P", system-ui, sans-serif',
+        fontSize: '18px',
+        fontStyle: 'normal',
       })
       .setOrigin(0.5)
 
@@ -337,8 +357,8 @@ export class GameScene extends Phaser.Scene {
       .text(0, -34, subtitle, {
         align: 'center',
         color: '#64748b',
-        fontFamily: 'Inter, system-ui, sans-serif',
-        fontSize: '16px',
+        fontFamily: '"Press Start 2P", system-ui, sans-serif',
+        fontSize: '10px',
       })
       .setOrigin(0.5)
 
@@ -349,14 +369,14 @@ export class GameScene extends Phaser.Scene {
       const buttonText = this.add
         .text(x, 58, button.label, {
           align: 'center',
-          backgroundColor: index === 0 ? '#3b82f6' : '#e2e8f0',
-          color: index === 0 ? '#ffffff' : '#1e293b',
-          fixedWidth: 112,
+          backgroundColor: index === 0 ? '#ffcc00' : '#e2e8f0',
+          color: index === 0 ? '#000000' : '#000000',
+          fixedWidth: 120,
           fixedHeight: 42,
-          fontFamily: 'Inter, system-ui, sans-serif',
-          fontSize: '16px',
-          fontStyle: '800',
-          padding: { top: 11 },
+          fontFamily: '"Press Start 2P", system-ui, sans-serif',
+          fontSize: '12px',
+          fontStyle: 'normal',
+          padding: { top: 13 },
         })
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true })

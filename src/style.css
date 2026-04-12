@@ -1,21 +1,20 @@
 :root {
-  --bg: #f8fafc;
-  --panel: rgba(255, 255, 255, 0.85);
-  --text: #1e293b;
-  --muted: #64748b;
-  --accent: #3b82f6;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --line: rgba(0, 0, 0, 0.08);
-  --shadow: rgba(0, 0, 0, 0.12);
+  --bg: #a8ddf4;
+  --panel: rgba(255, 255, 255, 1);
+  --text: #000000;
+  --muted: #4b5563;
+  --accent: #ffcc00;
+  --warning: #ffaa00;
+  --danger: #e60000;
+  --line: #000000;
+  --shadow: rgba(0, 0, 0, 0.4);
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+    "Press Start 2P", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
+  -webkit-font-smoothing: none;
   -moz-osx-font-smoothing: grayscale;
 }
 
@@ -45,8 +44,8 @@ input {
 .game-shell {
   display: grid;
   background:
-    radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.3), transparent 28rem),
-    linear-gradient(180deg, #38bdf8 0%, #0284c7 60%, #0369a1 100%);
+    radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.1), transparent 28rem),
+    linear-gradient(180deg, #9ca3af 0%, #6b7280 60%, #4b5563 100%);
 }
 
 .game-stage {
@@ -61,6 +60,8 @@ input {
   width: 100%;
   height: 100%;
   display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 /* ── Compact HUD ────────────────────────────────────────────── */
@@ -86,13 +87,12 @@ input {
 .hud__bar {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   background: var(--panel);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 6px 10px;
-  box-shadow: 0 4px 20px var(--shadow);
+  border: 4px solid var(--line);
+  border-radius: 0;
+  padding: 8px 12px;
+  box-shadow: 4px 4px 0px var(--shadow);
 }
 
 .hud-card {
@@ -104,20 +104,20 @@ input {
 }
 
 .hud-card__label {
-  color: var(--muted);
-  font-size: 9px;
-  line-height: 1;
-  letter-spacing: 0.04em;
+  color: var(--text);
+  font-size: 8px;
+  line-height: 1.5;
+  letter-spacing: 0;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
 .hud-card__value {
   color: var(--text);
-  font-size: 15px;
-  line-height: 1.2;
-  font-weight: 800;
-  letter-spacing: -0.01em;
+  font-size: 10px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0;
   white-space: nowrap;
 }
 
@@ -140,16 +140,17 @@ input {
 
 .uptime__track {
   flex: 1 1 0;
-  height: 6px;
+  height: 10px;
   overflow: hidden;
-  border-radius: 6px;
-  background: rgba(244, 251, 248, 0.10);
+  border-radius: 0;
+  background: #dbdbdb;
+  border: 2px solid var(--line);
 }
 
 .uptime__bar {
   height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--danger), var(--warning), var(--accent));
+  border-radius: 0;
+  background: var(--accent);
 }
 
 .uptime .hud-card__value {

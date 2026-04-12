@@ -15,10 +15,10 @@ export const AssetKeys = {
 } as const
 
 const BLOCK_THEME: Record<BlockKind, { bg: number; border: number; detail: number; led: number }> = {
-  server:  { bg: 0x1a3130, border: 0x55d6be, detail: 0x7ee7d6, led: 0x55d6be },
-  network: { bg: 0x162a3a, border: 0x4eaaff, detail: 0x6ec4ff, led: 0x4eaaff },
-  cooling: { bg: 0x281a3a, border: 0xb266ff, detail: 0xcc8aff, led: 0xb266ff },
-  power:   { bg: 0x3a2a14, border: 0xffaa33, detail: 0xffc266, led: 0xffaa33 },
+  server:  { bg: 0x224444, border: 0x55d6be, detail: 0x7ee7d6, led: 0x55d6be },
+  network: { bg: 0x1d3c52, border: 0x4eaaff, detail: 0x6ec4ff, led: 0x4eaaff },
+  cooling: { bg: 0x3d2757, border: 0xb266ff, detail: 0xcc8aff, led: 0xb266ff },
+  power:   { bg: 0x543e20, border: 0xffaa33, detail: 0xffc266, led: 0xffaa33 },
 }
 
 export function getBlockAssetKey(kind: BlockKind): string {
@@ -85,20 +85,27 @@ function createBlockWithTheme(
   const height = 70
   const g = scene.add.graphics()
 
-  // Background fill
-  g.fillStyle(theme.bg, 1)
-  g.fillRoundedRect(0, 0, width, height, 8)
+  // Outline
+  g.fillStyle(0x000000, 1)
+  g.fillRect(0, 0, width, height)
 
-  // Border stroke
-  g.lineStyle(3, theme.border, 1)
-  g.strokeRoundedRect(1.5, 1.5, width - 3, height - 3, 8)
+  // Background fill (inner)
+  g.fillStyle(theme.bg, 1)
+  g.fillRect(4, 4, width - 8, height - 8)
+
+  // Highlight border
+  g.fillStyle(theme.border, 1)
+  g.fillRect(4, 4, width - 8, 4) // top
+  g.fillRect(4, 4, 4, height - 8) // left
 
   // Draw kind-specific detail
   detailFn(g, width, height, theme)
 
-  // Status LED — top right
+  // Status LED — top right square
+  g.fillStyle(0x000000, 1)
+  g.fillRect(width - 24, 16, 12, 12)
   g.fillStyle(theme.led, 1)
-  g.fillCircle(width - 20, 18, 4)
+  g.fillRect(width - 20, 20, 4, 4)
 
   g.generateTexture(key, width, height)
   g.destroy()
@@ -112,13 +119,17 @@ function drawServerDetails(
   theme: (typeof BLOCK_THEME)[BlockKind],
 ) {
   // Dark slot bar across the top
-  g.fillStyle(0x102221, 1)
-  g.fillRect(14, 12, w - 28, 12)
+  g.fillStyle(0x000000, 1)
+  g.fillRect(16, 12, w - 48, 16)
+  g.fillStyle(0x1a3130, 1)
+  g.fillRect(20, 16, w - 56, 8)
 
-  // Vertical rack-mount modules
-  g.fillStyle(theme.detail, 1)
-  for (let x = 18; x < w - 20; x += 18) {
-    g.fillRoundedRect(x, 34, 10, 16, 3)
+  // Vertical rack-mount modules (squares)
+  for (let x = 16; x < w - 24; x += 20) {
+    g.fillStyle(0x000000, 1)
+    g.fillRect(x, 34, 16, 20)
+    g.fillStyle(theme.detail, 1)
+    g.fillRect(x + 4, 38, 8, 12)
   }
 }
 
@@ -130,20 +141,20 @@ function drawNetworkDetails(
   theme: (typeof BLOCK_THEME)[BlockKind],
 ) {
   // Top header strip
+  g.fillStyle(0x000000, 1)
+  g.fillRect(16, 10, w - 48, 16)
   g.fillStyle(0x0e1f2d, 1)
-  g.fillRect(14, 10, w - 28, 10)
+  g.fillRect(20, 14, w - 56, 8)
 
-  // Port grid — two rows of small squares
-  g.fillStyle(theme.detail, 0.9)
+  // Port grid — two rows of small squares, chunky
   for (let row = 0; row < 2; row++) {
-    for (let x = 18; x < w - 24; x += 14) {
-      g.fillRect(x, 28 + row * 14, 8, 8)
+    for (let x = 16; x < w - 24; x += 16) {
+      g.fillStyle(0x000000, 1)
+      g.fillRect(x, 32 + row * 16, 12, 12)
+      g.fillStyle(theme.detail, 0.9)
+      g.fillRect(x + 2, 34 + row * 16, 8, 8)
     }
   }
-
-  // Connecting line between ports
-  g.lineStyle(1, theme.border, 0.35)
-  g.lineBetween(18, 55, w - 24, 55)
 }
 
 /* ── Cooling: fan grille + coolant pipe ────────────────────────── */
@@ -153,24 +164,24 @@ function drawCoolingDetails(
   _h: number,
   theme: (typeof BLOCK_THEME)[BlockKind],
 ) {
-  // Two fan circles
-  const fanRadius = 14
-  const fanY = 35
-  for (const cx of [w * 0.3, w * 0.6]) {
-    g.lineStyle(2, theme.detail, 0.7)
-    g.strokeCircle(cx, fanY, fanRadius)
-    // Fan blades — X pattern
-    g.lineStyle(2, theme.detail, 0.5)
-    g.lineBetween(cx - 8, fanY - 8, cx + 8, fanY + 8)
-    g.lineBetween(cx + 8, fanY - 8, cx - 8, fanY + 8)
+  // Two fan squares
+  const fanY = 28
+  for (const cx of [w * 0.25, w * 0.6]) {
+    g.fillStyle(0x000000, 1)
+    g.fillRect(cx, fanY, 32, 32)
+    g.fillStyle(0x281a3a, 1)
+    g.fillRect(cx + 4, fanY + 4, 24, 24)
+    // Fan blades — simple plus pattern
+    g.fillStyle(theme.detail, 0.8)
+    g.fillRect(cx + 12, fanY + 4, 8, 24)
+    g.fillRect(cx + 4, fanY + 12, 24, 8)
   }
 
-  // Coolant pipe at bottom
-  g.lineStyle(3, theme.border, 0.45)
-  g.lineBetween(14, 58, w - 14, 58)
-  g.fillStyle(theme.led, 0.8)
-  g.fillCircle(28, 58, 3)
-  g.fillCircle(w - 28, 58, 3)
+  // Pipe at bottom
+  g.fillStyle(0x000000, 1)
+  g.fillRect(16, 62, w - 32, 8)
+  g.fillStyle(theme.border, 0.8)
+  g.fillRect(16, 62, w - 32, 4)
 }
 
 /* ── Power: battery cells + indicator bar ──────────────────────── */
@@ -180,22 +191,26 @@ function drawPowerDetails(
   _h: number,
   theme: (typeof BLOCK_THEME)[BlockKind],
 ) {
-  // Battery cells — tall rounded rects
-  g.fillStyle(theme.detail, 0.75)
+  // Battery cells — chunky rects
   const cellW = 16
-  const cellH = 30
-  const gap = 6
+  const cellH = 32
+  const gap = 8
   const totalCells = 6
   const startX = (w - totalCells * (cellW + gap) + gap) / 2
   for (let i = 0; i < totalCells; i++) {
-    g.fillRoundedRect(startX + i * (cellW + gap), 14, cellW, cellH, 4)
+    g.fillStyle(0x000000, 1)
+    g.fillRect(startX + i * (cellW + gap), 12, cellW, cellH)
+    g.fillStyle(theme.detail, 0.85)
+    g.fillRect(startX + i * (cellW + gap) + 4, 16, cellW - 8, cellH - 8)
   }
 
   // Power indicator bar at bottom
+  g.fillStyle(0x000000, 1)
+  g.fillRect(16, 52, w - 48, 12)
   g.fillStyle(0x2a1e0a, 1)
-  g.fillRect(14, 52, w - 28, 8)
+  g.fillRect(20, 56, w - 56, 4)
   g.fillStyle(theme.led, 0.9)
-  g.fillRect(14, 52, (w - 28) * 0.75, 8)
+  g.fillRect(20, 56, (w - 56) * 0.75, 4)
 }
 
 function createFloor(scene: Phaser.Scene) {
@@ -203,16 +218,19 @@ function createFloor(scene: Phaser.Scene) {
   const height = 86
   const graphics = scene.add.graphics()
 
+  graphics.fillStyle(0x1a1a1a, 1) // Outline
+  graphics.fillRect(0, 0, width, height)
+  
   graphics.fillStyle(0x3e464c, 1) // Dark concrete base
-  graphics.fillRoundedRect(0, 0, width, height, 6)
+  graphics.fillRect(4, 4, width - 8, height - 8)
   
-  graphics.fillStyle(0x2a3035, 1) // Platform edge shadow
-  graphics.fillRect(0, 0, width, 12)
+  graphics.fillStyle(0x5a656c, 1) // Platform edge highlight
+  graphics.fillRect(4, 4, width - 8, 4)
   
-  // Concrete expansion joints
-  graphics.lineStyle(3, 0x1f2428, 0.6)
+  // Concrete expansion joints blocky
+  graphics.fillStyle(0x1f2428, 1)
   for (let x = 40; x < width; x += 80) {
-    graphics.lineBetween(x, 12, x, height)
+    graphics.fillRect(x, 8, 4, height - 8)
   }
 
   graphics.generateTexture(AssetKeys.floor, width, height)

@@ -11,25 +11,24 @@ export class MenuScene extends Phaser.Scene {
   }
 
   create() {
-    this.cameras.main.setBackgroundColor('#f8fafc')
+    this.cameras.main.setBackgroundColor('#87ceeb')
     this.addBackground()
     gameEvents.emit(EVENTS.menuEntered)
 
     this.add
       .text(GAME_WIDTH / 2, 284, 'DataBloxx', {
-        color: '#1e293b',
-        fontFamily: 'Inter, system-ui, sans-serif',
-        fontSize: '58px',
-        fontStyle: '800',
+        color: '#000000',
+        fontFamily: '"Press Start 2P", system-ui, sans-serif',
+        fontSize: '32px',
       })
       .setOrigin(0.5)
 
     this.add
-      .text(GAME_WIDTH / 2, 348, 'Choose a deployment target.', {
+      .text(GAME_WIDTH / 2, 348, 'Choose a deployment target', {
         align: 'center',
-        color: '#64748b',
-        fontFamily: 'Inter, system-ui, sans-serif',
-        fontSize: '20px',
+        color: '#000000',
+        fontFamily: '"Press Start 2P", system-ui, sans-serif',
+        fontSize: '12px',
         wordWrap: { width: 430 },
       })
       .setOrigin(0.5)
@@ -39,9 +38,9 @@ export class MenuScene extends Phaser.Scene {
 
     this.add
       .text(GAME_WIDTH / 2, GAME_HEIGHT - 32, 'Matter.js physics via Phaser 4', {
-        color: '#94a3b8',
-        fontFamily: 'Inter, system-ui, sans-serif',
-        fontSize: '15px',
+        color: '#ffffff',
+        fontFamily: '"Press Start 2P", system-ui, sans-serif',
+        fontSize: '8px',
       })
       .setOrigin(0.5)
   }
@@ -71,18 +70,17 @@ export class MenuScene extends Phaser.Scene {
       const y = startY + row * (tileSize + gap)
       const completion = completions[String(level.id)]
 
-      const tile = this.add.rectangle(x, y, tileSize, tileSize, 0xffffff, 0.9)
+      const tile = this.add.rectangle(x, y, tileSize, tileSize, completion ? 0xffcc00 : 0xe2e8f0, 1)
       tile.setOrigin(0)
-      tile.setStrokeStyle(3, completion ? 0x3b82f6 : 0xcbd5e1, 1)
+      tile.setStrokeStyle(4, 0x000000, 1)
       tile.setInteractive({ useHandCursor: true })
       tile.on('pointerdown', () => this.startGame(level))
 
       const numberY = completion ? y + tileSize / 2 - 12 : y + tileSize / 2
       this.add.text(x + tileSize / 2, numberY, String(level.id), {
-        color: completion ? '#3b82f6' : '#94a3b8',
-        fontFamily: 'Inter, system-ui, sans-serif',
-        fontSize: '42px',
-        fontStyle: '800',
+        color: '#000000',
+        fontFamily: '"Press Start 2P", system-ui, sans-serif',
+        fontSize: '24px',
       }).setOrigin(0.5)
 
       if (completion) {
@@ -95,8 +93,8 @@ export class MenuScene extends Phaser.Scene {
 
         const starsText = '★'.repeat(starsCount) + '☆'.repeat(3 - starsCount)
         this.add.text(x + tileSize / 2, y + tileSize - 22, starsText, {
-          color: '#f59e0b',
-          fontSize: '22px',
+          color: '#000000',
+          fontSize: '28px',
         }).setOrigin(0.5)
       }
     })
@@ -108,50 +106,52 @@ export class MenuScene extends Phaser.Scene {
     const buttonHeight = 70
     const buttonX = GAME_WIDTH / 2
     const buttonY = GAME_HEIGHT - 132
-    const radius = 20
 
-    // Create rounded rectangle button using graphics
     const graphics = this.add.graphics()
-    graphics.fillStyle(0x3b82f6, 0.85)
-    graphics.fillRoundedRect(buttonX - buttonWidth / 2, buttonY - buttonHeight / 2, buttonWidth, buttonHeight, radius)
-    graphics.lineStyle(3, endlessRecord ? 0x1e40af : 0x60a5fa, 1)
-    graphics.strokeRoundedRect(buttonX - buttonWidth / 2, buttonY - buttonHeight / 2, buttonWidth, buttonHeight, radius)
+    graphics.fillStyle(0x000000, 1)
+    graphics.fillRect(buttonX - buttonWidth / 2, buttonY - buttonHeight / 2, buttonWidth, buttonHeight)
+    graphics.fillStyle(0x3b82f6, 1)
+    graphics.fillRect(buttonX - buttonWidth / 2 + 4, buttonY - buttonHeight / 2 + 4, buttonWidth - 8, buttonHeight - 8)
+    
     graphics.setInteractive(
       new Phaser.Geom.Rectangle(buttonX - buttonWidth / 2, buttonY - buttonHeight / 2, buttonWidth, buttonHeight),
       Phaser.Geom.Rectangle.Contains,
     )
     graphics.on('pointerdown', () => this.startEndless())
 
-    this.add.text(buttonX, buttonY - 12, 'Endless Gamemode', {
+    this.add.text(buttonX, buttonY - 12, 'ENDLESS MODE', {
       color: '#ffffff',
-      fontFamily: 'Inter, system-ui, sans-serif',
-      fontSize: '20px',
-      fontStyle: '800',
+      fontFamily: '"Press Start 2P", system-ui, sans-serif',
+      fontSize: '14px',
     }).setOrigin(0.5)
 
-    const recordText = endlessRecord ? `Personal record: ${endlessRecord.blockCount} blocks` : 'Personal record: —'
-    this.add.text(buttonX, buttonY + 16, recordText, {
+    const recordText = endlessRecord ? `RECORD: ${endlessRecord.blockCount} BLOCKS` : 'RECORD: —'
+    this.add.text(buttonX, buttonY + 14, recordText, {
       color: '#ffffff',
-      fontFamily: 'Inter, system-ui, sans-serif',
-      fontSize: '12px',
+      fontFamily: '"Press Start 2P", system-ui, sans-serif',
+      fontSize: '8px',
     }).setOrigin(0.5)
   }
 
   private addBackground() {
     const graphics = this.add.graphics()
-    graphics.lineStyle(1, 0xffffff, 0.8)
-
-    for (let x = 0; x <= GAME_WIDTH; x += 36) {
-      graphics.lineBetween(x, 0, x, GAME_HEIGHT)
+    
+    // Draw thick blocky clouds as background flavor
+    const drawCloud = (cx: number, cy: number, scale: number) => {
+      const r = 22 * scale
+      const blocks = [
+        [0, 0, r * 4.0, r * 1.5],
+        [-r * 1.0, r * 0.5, r * 2.0, r * 1.0],
+        [r * 1.0, r * 0.5, r * 2.5, r * 1.5],
+        [0, -r * 0.5, r * 2.0, r * 1.0]
+      ]
+      graphics.fillStyle(0xffffff, 1)
+      blocks.forEach(b => graphics.fillRect(cx + b[0], cy + b[1], b[2], b[3]))
     }
 
-    for (let y = 0; y <= GAME_HEIGHT; y += 36) {
-      graphics.lineBetween(0, y, GAME_WIDTH, y)
-    }
-
-    graphics.fillStyle(0x38bdf8, 0.15)
-    graphics.fillCircle(96, 132, 170)
-    graphics.fillStyle(0xfbbf24, 0.15)
-    graphics.fillCircle(440, 684, 220)
+    drawCloud(100, 150, 1.2)
+    drawCloud(400, 250, 0.8)
+    drawCloud(150, 700, 1.0)
+    drawCloud(450, 600, 1.5)
   }
 }
