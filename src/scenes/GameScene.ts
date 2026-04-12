@@ -97,6 +97,13 @@ export class GameScene extends Phaser.Scene {
     this.dampenBlocksBelowView()
     this.applyStability()
     this.moveCamera()
+
+    if (this.scoring.getState().combo > 1) {
+      this.effects?.updateComboGlow(
+        this.blocks.filter((b) => b.hasScored()),
+        delta
+      )
+    }
   }
 
   private getNextBlockKind(): BlockKind {
@@ -145,6 +152,7 @@ export class GameScene extends Phaser.Scene {
       this.playImpactSound()
     }
     this.effects?.pulse(block.x, block.y, block.kind, result.perfect)
+
     gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
     gameEvents.emit(
       EVENTS.gameStatus,

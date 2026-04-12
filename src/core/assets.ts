@@ -12,6 +12,7 @@ export const AssetKeys = {
   connected: 'connected',
   levelFailed: 'level-failed',
   fallImpact: 'fall-impact',
+  star: 'particle-star',
 } as const
 
 const BLOCK_THEME: Record<BlockKind, { bg: number; border: number; detail: number; led: number }> = {
@@ -37,8 +38,29 @@ export function getBlockAccentColor(kind: BlockKind): number {
 
 export function createGeneratedAssets(scene: Phaser.Scene) {
   createPixel(scene)
+  createStar(scene)
   createAllBlocks(scene)
   createFloor(scene)
+}
+
+function createStar(scene: Phaser.Scene) {
+  const g = scene.add.graphics()
+  g.fillStyle(0xffffff, 1)
+  // Simple 5x5 pixel star:
+  //   *  
+  //  *** 
+  // *****
+  //  *** 
+  // *   *
+  g.fillRect(2, 0, 1, 1)
+  g.fillRect(1, 1, 3, 1)
+  g.fillRect(0, 2, 5, 1)
+  g.fillRect(1, 3, 3, 1)
+  g.fillRect(0, 4, 1, 1)
+  g.fillRect(4, 4, 1, 1)
+  
+  g.generateTexture(AssetKeys.star, 5, 5)
+  g.destroy()
 }
 
 function createPixel(scene: Phaser.Scene) {

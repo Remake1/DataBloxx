@@ -10,12 +10,20 @@ export class Effects {
   }
 
   pulse(x: number, y: number, _kind: BlockKind = 'server', perfect = true) {
-    const color = 0xffcc00 // Gold pixel dust
+    const color = perfect ? 0xffcc00 : 0x888888 // Gold pixel dust for perfect, gray otherwise
     const particleCount = perfect ? 24 : 12
     
     for (let i = 0; i < particleCount; i++) {
-      const particleSize = Phaser.Math.Between(4, 8)
-      const particle = this.scene.add.rectangle(x, y, particleSize, particleSize, color)
+      const particleSize = perfect ? Phaser.Math.Between(5, 10) : Phaser.Math.Between(2, 5)
+      
+      const particle = perfect 
+        ? this.scene.add.image(x, y, AssetKeys.star)
+        : this.scene.add.rectangle(x, y, particleSize, particleSize, color)
+
+      if (perfect) {
+        particle.setTint(color)
+        particle.setDisplaySize(particleSize, particleSize)
+      }
       
       const angle = Phaser.Math.Between(0, 360) * (Math.PI / 180)
       const distance = Phaser.Math.Between(20, 110)
@@ -25,9 +33,8 @@ export class Effects {
         x: x + Math.cos(angle) * distance,
         y: y + Math.sin(angle) * distance + 40,
         alpha: { from: 1, to: 0 },
-        rotation: Phaser.Math.Between(-4, 4),
-        duration: Phaser.Math.Between(500, 900),
-        ease: 'Quad.Out',
+        duration: Phaser.Math.Between(250, 450),
+        ease: 'Linear',
         onComplete: () => particle.destroy(),
       })
     }
@@ -44,8 +51,38 @@ export class Effects {
         x: x + Phaser.Math.Between(-46, 46),
         y: y + Phaser.Math.Between(-34, 12),
         alpha: 0,
-        duration: 360,
-        ease: 'Quad.Out',
+        duration: 200,
+        ease: 'Linear',
+        onComplete: () => particle.destroy(),
+      })
+    }
+  }
+
+  updateComboGlow(blocks: { x: number; y: number }[], delta: number) {
+    if (blocks.length === 0) return
+
+    // Spawn proportional to delta so it's frame-rate independent
+    // ~12 particles per second across the tower
+    const chance = (delta / 1000) * 12
+    if (Math.random() < chance) {
+      // Pick a random block from the tower
+      const block = blocks[Phaser.Math.Between(0, blocks.length - 1)]
+      
+      // Give them a wider horizontal spread to appear in the air around the tower
+      const x = block.x + Phaser.Math.Between(-140, 140)
+      const y = block.y + Phaser.Math.Between(-35, 35)
+      
+      // Large 'shine' star particles to appear more "pixelous"
+      const particleSize = Phaser.Math.Between(10, 18)
+      const particle = this.scene.add.image(x, y, AssetKeys.star)
+      particle.setTint(0xffea00)
+      particle.setDisplaySize(particleSize, particleSize)
+      
+      this.scene.tweens.add({
+        targets: particle,
+        alpha: { from: 1, to: 0 },
+        duration: Phaser.Math.Between(150, 400),
+        ease: 'Linear',
         onComplete: () => particle.destroy(),
       })
     }
