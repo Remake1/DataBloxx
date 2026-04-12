@@ -9,8 +9,8 @@ export const WORLD = {
   safeTiltRadians: 0.22,
   offscreenY: GAME_HEIGHT + 160,
   belowViewFailLineOffset: 100,
-  cameraFollowStartLine: 620,
-  cameraFollowEndLine: 820,
+  cameraFollowStartLine: 450,
+  cameraFollowEndLine: 700,
   cameraFollowRampBlocks: 18,
 };
 
@@ -22,8 +22,13 @@ export const BLOCK = {
   restitution: 0,
   friction: 1.4,
   frictionStatic: 2.2,
-  frictionAir: 0.065,
-  density: 0.008,
+  frictionAir: 0.045,
+  density: 0.012,
+  placementLeanStartRatio: 0.08,
+  placementDangerOverhangRatio: 0.45,
+  placementLeanAngularVelocity: 0.028,
+  placementLeanHorizontalVelocity: 0.28,
+  completionSettleDelayMs: 650,
 };
 
 export const CRANE = {

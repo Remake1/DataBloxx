@@ -15,15 +15,10 @@ export class Effects {
     
     for (let i = 0; i < particleCount; i++) {
       const particleSize = perfect ? Phaser.Math.Between(5, 10) : Phaser.Math.Between(2, 5)
-      
-      const particle = perfect 
-        ? this.scene.add.image(x, y, AssetKeys.star)
-        : this.scene.add.rectangle(x, y, particleSize, particleSize, color)
 
-      if (perfect) {
-        particle.setTint(color)
-        particle.setDisplaySize(particleSize, particleSize)
-      }
+      const particle = perfect
+        ? this.scene.add.image(x, y, AssetKeys.star).setTint(color).setDisplaySize(particleSize, particleSize)
+        : this.scene.add.rectangle(x, y, particleSize, particleSize, color)
       
       const angle = Phaser.Math.Between(0, 360) * (Math.PI / 180)
       const distance = Phaser.Math.Between(20, 110)

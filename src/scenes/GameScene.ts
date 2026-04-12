@@ -29,6 +29,7 @@ export class GameScene extends Phaser.Scene {
   private blockKindIndex = 0
   private lastImpactSoundMs = 0
   private isEndless = false
+  private pendingCompletionAtMs = 0
   private endlessBlockKinds: BlockKind[] = ['server', 'cooling', 'power', 'network']
 
   constructor() {
@@ -43,7 +44,9 @@ export class GameScene extends Phaser.Scene {
     this.blocks = []
     this.blockKindIndex = 0
     this.lastImpactSoundMs = 0
+    this.pendingCompletionAtMs = 0
     this.scoring.reset()
+    this.matter.resume()
     this.cameras.main.setBackgroundColor('#87ceeb')
     this.cameras.main.scrollY = 0
     this.matter.world.setBounds(
@@ -70,7 +73,7 @@ export class GameScene extends Phaser.Scene {
     this.input.on('pointerdown', () => this.dropBlock())
     this.input.keyboard?.on('keydown-SPACE', () => this.dropBlock())
 
-    gameEvents.emit(EVENTS.gameReset)
+    gameEvents.emit(EVENTS.gameReset, this.isEndless)
     gameEvents.emit(EVENTS.levelChanged, this.level)
     gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
     gameEvents.emit(
@@ -92,10 +95,15 @@ export class GameScene extends Phaser.Scene {
       this.difficulty.getCraneSpeed(blocksPlaced),
       this.difficulty.getCraneArcHeight(blocksPlaced),
     )
+    this.failFastCollapses()
+    if (this.isGameOver) {
+      return
+    }
     this.scoreSettledBlocks()
     this.stabilizeSettledBlocks()
     this.dampenBlocksBelowView()
     this.applyStability()
+    this.completeLevelIfStable()
     this.moveCamera()
 
     if (this.scoring.getState().combo > 1) {
@@ -143,8 +151,25 @@ export class GameScene extends Phaser.Scene {
     }
 
     const previousBlock = this.blocks[this.blocks.indexOf(block) - 1]
+    const placementStress = this.getPlacementStress(block, previousBlock)
+    if (placementStress.isDangerous) {
+      if (block.hasPlacementStressApplied()) {
+        this.scoring.triggerOutage()
+        gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
+        this.failLevel()
+        return
+      }
+
+      this.applyPlacementStress(block, placementStress, true)
+      block.markPlacementStressApplied()
+      this.playImpactSound()
+      gameEvents.emit(EVENTS.gameStatus, 'Overhang detected. Load shifting...')
+      return
+    }
+
     const result = this.scoring.scorePlacement(block, previousBlock)
     block.markScored()
+    this.applyPlacementStress(block, placementStress, false)
     this.scoring.setUptime(this.stability.getUptime(this.blocks))
     if (result.perfect) {
       this.playSound(AssetKeys.connected, 0.55)
@@ -160,26 +185,88 @@ export class GameScene extends Phaser.Scene {
     )
 
     if (!this.isEndless && this.scoring.getState().blocks >= this.level.targetBlocks) {
-      this.completeLevel()
+      this.pendingCompletionAtMs = this.time.now + BLOCK.completionSettleDelayMs
+      gameEvents.emit(EVENTS.gameStatus, 'Final rack settling...')
+    }
+  }
+
+  private getPlacementStress(block: DatacenterBlock, previousBlock?: DatacenterBlock) {
+    const anchorX = previousBlock?.x ?? WORLD.targetX
+    const supportWidth = previousBlock ? Math.min(block.blockWidth, previousBlock.blockWidth) : block.blockWidth
+    const offset = block.x - anchorX
+    const offsetRatio = Math.abs(offset) / supportWidth
+
+    return {
+      direction: Math.sign(offset) || 1,
+      offsetRatio,
+      strength: Phaser.Math.Clamp(
+        (offsetRatio - BLOCK.placementLeanStartRatio)
+          / (BLOCK.placementDangerOverhangRatio - BLOCK.placementLeanStartRatio),
+        0,
+        1,
+      ),
+      isDangerous: Boolean(previousBlock) && offsetRatio >= BLOCK.placementDangerOverhangRatio,
+    }
+  }
+
+  private applyPlacementStress(
+    block: DatacenterBlock,
+    stress: { direction: number; strength: number; offsetRatio: number },
+    isDangerous: boolean,
+  ) {
+    if (stress.strength <= 0) {
       return
+    }
+
+    const body = block.body as MatterJS.BodyType
+    const multiplier = isDangerous ? 1.85 : 1
+    const angularVelocity = stress.direction * BLOCK.placementLeanAngularVelocity * stress.strength * multiplier
+    const velocityX = stress.direction * BLOCK.placementLeanHorizontalVelocity * stress.strength * multiplier
+
+    this.matter.body.setAngularVelocity(body, body.angularVelocity + angularVelocity)
+    this.matter.body.setVelocity(body, {
+      x: body.velocity.x + velocityX,
+      y: body.velocity.y,
+    })
+  }
+
+  private completeLevelIfStable() {
+    if (this.isEndless || this.pendingCompletionAtMs === 0 || this.time.now < this.pendingCompletionAtMs) {
+      return
+    }
+
+    if (!this.areScoredBlocksStable()) {
+      return
+    }
+
+    this.completeLevel()
+  }
+
+  private areScoredBlocksStable() {
+    return this.blocks
+      .filter((block) => block.hasScored())
+      .every((block) => {
+        const body = block.body as MatterJS.BodyType
+        return Math.abs(body.velocity.x) < 0.08
+          && Math.abs(body.velocity.y) < 0.16
+          && Math.abs(body.angularVelocity) < 0.025
+      })
+  }
+
+  private failFastCollapses() {
+    if (
+      this.hasDroppedBlockBelowViewFailLine()
+      || this.hasDroppedBlockTouchedFloor()
+      || this.hasScoredBlockCollapsedBelowView()
+      || this.hasScoredUpperBlockTouchedFloor()
+    ) {
+      this.scoring.triggerOutage()
+      gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
+      this.failLevel()
     }
   }
 
   private applyStability() {
-    if (this.hasFallingBlockBelowViewFailLine()) {
-      this.scoring.triggerOutage()
-      gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
-      this.failLevel()
-      return
-    }
-
-    if (this.stability.countBlocksTouchingFloor(this.blocks) >= 2) {
-      this.scoring.triggerOutage()
-      gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
-      this.failLevel()
-      return
-    }
-
     const uptime = this.stability.getUptime(this.blocks)
     if (Math.abs(uptime - this.scoring.getState().uptime) > 0.05) {
       this.scoring.setUptime(uptime)
@@ -191,16 +278,53 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private hasFallingBlockBelowViewFailLine() {
+  private hasDroppedBlockBelowViewFailLine() {
     const failLineY = this.cameras.main.scrollY + this.cameras.main.height + WORLD.belowViewFailLineOffset
 
     return this.blocks.some((block) => {
-      if (block.getBounds().bottom < failLineY) {
+      if (block.hasScored() || block.getBounds().bottom < failLineY) {
         return false
       }
 
       const body = block.body as MatterJS.BodyType
-      return !block.hasScored() || body.velocity.y > 0.45
+      return body.velocity.y > -0.1
+    })
+  }
+
+  private hasDroppedBlockTouchedFloor() {
+    const floorTopY = WORLD.floorY - WORLD.floorHeight / 2
+
+    return this.blocks.some((block, index) => {
+      if (index === 0 || block.hasScored()) {
+        return false
+      }
+
+      return block.getBounds().bottom >= floorTopY - BLOCK.floorTouchTolerance
+    })
+  }
+
+  private hasScoredBlockCollapsedBelowView() {
+    const failLineY = this.cameras.main.scrollY + this.cameras.main.height + WORLD.belowViewFailLineOffset
+
+    return this.blocks.some((block, index) => {
+      if (index === 0 || !block.hasScored() || block.getBounds().bottom < failLineY) {
+        return false
+      }
+
+      const body = block.body as MatterJS.BodyType
+      return body.velocity.y > 0.55 || Math.abs(body.angularVelocity) > 0.06
+    })
+  }
+
+  private hasScoredUpperBlockTouchedFloor() {
+    const floorTopY = WORLD.floorY - WORLD.floorHeight / 2
+
+    return this.blocks.some((block, index) => {
+      if (index === 0 || !block.hasScored()) {
+        return false
+      }
+
+      return block.getBounds().bottom >= floorTopY - BLOCK.floorTouchTolerance
     })
   }
 
@@ -213,20 +337,15 @@ export class GameScene extends Phaser.Scene {
 
       const body = block.body as MatterJS.BodyType
 
-      if (Math.abs(body.angularVelocity) > 0.0025) {
-        this.matter.body.setAngularVelocity(body, body.angularVelocity * 0.90)
+      if (Math.abs(body.angularVelocity) > 0.004) {
+        this.matter.body.setAngularVelocity(body, body.angularVelocity * 0.96)
       }
 
-      if (Math.abs(body.velocity.x) > 0.035) {
+      if (Math.abs(body.velocity.x) > 0.04) {
         this.matter.body.setVelocity(body, {
-          x: body.velocity.x * 0.90,
+          x: body.velocity.x * 0.96,
           y: body.velocity.y,
         })
-      }
-
-      if (Math.abs(block.rotation) > 0.02) {
-        const correctedAngle = block.rotation * 0.988
-        this.matter.body.setAngle(body, correctedAngle)
       }
     }
   }
@@ -266,6 +385,7 @@ export class GameScene extends Phaser.Scene {
     this.playSound(AssetKeys.levelComplete, 0.85)
     this.placement?.setEnabled(false)
     this.crane?.setVisible(false)
+    this.matter.pause()
     const state = this.scoring.getState()
     const timeMs = Math.max(0, this.time.now - this.levelStartMs)
 
@@ -305,13 +425,13 @@ export class GameScene extends Phaser.Scene {
       }
       saveEndlessRecord(record)
       gameEvents.emit(EVENTS.gameStatus, 'Tower collapsed. Record saved.')
-      this.drawEndPanel('Tower Collapse', `${blocksPlaced} blocks placed • ${Math.round(height)}px`, [
+      this.drawEndPanel('Tower Collapse', `${blocksPlaced} blocks placed • Score: ${this.scoring.getState().score}`, [
         { label: 'Retry', action: () => this.restartLevel() },
         { label: 'Exit', action: () => this.exitToMenu() },
       ])
     } else {
       gameEvents.emit(EVENTS.gameStatus, 'Outage. Retry or return to level select.')
-      this.drawEndPanel('Deployment Failed', 'Uptime target lost.', [
+      this.drawEndPanel('Deployment Failed', `Score: ${this.scoring.getState().score}`, [
         { label: 'Retry', action: () => this.restartLevel() },
         { label: 'Exit', action: () => this.exitToMenu() },
       ])
