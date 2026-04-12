@@ -20,6 +20,7 @@ export class GameScene extends Phaser.Scene {
   private crane?: CraneArm
   private effects?: Effects
   private placement?: PlacementSystem
+  private floor?: Phaser.Physics.Matter.Image
   private readonly scoring = new ScoringSystem()
   private readonly stability = new StabilitySystem()
   private readonly difficulty = new DifficultySystem()
@@ -92,6 +93,7 @@ export class GameScene extends Phaser.Scene {
       this.difficulty.getCraneSpeed(blocksPlaced),
       this.difficulty.getCraneArcHeight(blocksPlaced),
     )
+    this.attachSupportedBlocks()
     this.scoreSettledBlocks()
     this.stabilizeSettledBlocks()
     this.dampenBlocksBelowView()
@@ -335,6 +337,102 @@ export class GameScene extends Phaser.Scene {
     return Math.abs(lowestY - highestY)
   }
 
+  private attachSupportedBlocks() {
+    if (!this.floor) {
+      return
+    }
+
+    const floorTopY = WORLD.floorY - WORLD.floorHeight / 2
+
+    for (const block of this.blocks) {
+      if (block.hasScored() || block.isAttached()) {
+        continue
+      }
+
+      const bottomY = block.getBounds().bottom
+      const body = block.body as MatterJS.BodyType
+
+      if (this.attachToFloorIfTouched(block, bottomY, floorTopY, body)) {
+        continue
+      }
+
+      const support = this.findSupportingBlock(block, bottomY)
+      if (support) {
+        this.attachBlockToSupport(block, support)
+      }
+    }
+  }
+
+  private attachToFloorIfTouched(
+    block: DatacenterBlock,
+    bottomY: number,
+    floorTopY: number,
+    body: MatterJS.BodyType,
+  ) {
+    const isTouchingFloor = bottomY >= floorTopY - BLOCK.floorTouchTolerance && bottomY <= floorTopY + BLOCK.floorTouchTolerance
+    if (!isTouchingFloor) {
+      return false
+    }
+
+    if (Math.abs(body.velocity.y) > 0.45 || Math.abs(body.angularVelocity) > 0.08) {
+      return false
+    }
+
+    if (!this.isBlockRotationAligned(block, 0)) {
+      return false
+    }
+
+    this.glueBlock(block, floorTopY)
+    return true
+  }
+
+  private findSupportingBlock(block: DatacenterBlock, bottomY: number) {
+    const candidateEntries = this.blocks
+      .filter((candidate) => candidate !== block && (candidate.hasScored() || candidate.isSettled()))
+      .map((candidate) => {
+        const candidateBounds = candidate.getBounds()
+        const topY = candidateBounds.top
+        const overlap = Math.min(block.getBounds().right, candidateBounds.right) - Math.max(block.getBounds().left, candidateBounds.left)
+        return {
+          candidate,
+          topY,
+          overlap,
+          distance: Math.abs(bottomY - topY),
+        }
+      })
+      .filter((entry) => {
+        return (
+          entry.overlap >= Math.min(block.displayWidth, entry.candidate.displayWidth) * 0.20 &&
+          entry.distance <= BLOCK.floorTouchTolerance &&
+          block.y < entry.candidate.y &&
+          this.isBlockRotationAligned(block, entry.candidate.rotation)
+        )
+      })
+      .sort((a, b) => a.distance - b.distance)
+
+    return candidateEntries.length ? candidateEntries[0].candidate : null
+  }
+
+  private attachBlockToSupport(block: DatacenterBlock, support: DatacenterBlock) {
+    const supportTopY = support.getBounds().top
+    this.glueBlock(block, supportTopY)
+  }
+
+  private glueBlock(block: DatacenterBlock, supportTopY: number) {
+    block.setStatic(true)
+    block.setPosition(block.x, supportTopY - BLOCK.height / 2)
+
+    const body = block.body as MatterJS.BodyType
+    this.matter.body.setVelocity(body, { x: 0, y: 0 })
+    this.matter.body.setAngularVelocity(body, 0)
+    block.markAttached()
+  }
+
+  private isBlockRotationAligned(block: DatacenterBlock, supportRotation: number) {
+    const delta = Phaser.Math.Angle.Wrap(block.rotation - supportRotation)
+    return Math.abs(delta) <= 1e-10
+  }
+
   private drawEndPanel(
     title: string,
     subtitle: string,
@@ -436,6 +534,7 @@ export class GameScene extends Phaser.Scene {
     })
     floor.setDisplaySize(GAME_WIDTH + 80, WORLD.floorHeight)
     floor.setRectangle(GAME_WIDTH + 80, WORLD.floorHeight, { isStatic: true, friction: 1 })
+    this.floor = floor
   }
 
   private addGridOverlay() {

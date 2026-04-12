@@ -7,6 +7,7 @@ export class DatacenterBlock extends Phaser.Physics.Matter.Sprite {
   readonly blockWidth: number
   readonly kind: BlockKind
   private scored = false
+  private attached = false
   private readonly createdAt: number
 
   constructor(scene: Phaser.Scene, x: number, y: number, width: number, kind: BlockKind = 'server') {
@@ -29,6 +30,14 @@ export class DatacenterBlock extends Phaser.Physics.Matter.Sprite {
 
   markScored() {
     this.scored = true
+  }
+
+  markAttached() {
+    this.attached = true
+  }
+
+  isAttached() {
+    return this.attached
   }
 
   hasScored() {

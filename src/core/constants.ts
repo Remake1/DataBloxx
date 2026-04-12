@@ -23,7 +23,7 @@ export const BLOCK = {
   friction: 1.4,
   frictionStatic: 2.2,
   frictionAir: 0.065,
-  density: 0.008,
+  density: 0.02,
 };
 
 export const CRANE = {
