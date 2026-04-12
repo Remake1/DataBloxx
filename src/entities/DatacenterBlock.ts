@@ -7,6 +7,7 @@ export class DatacenterBlock extends Phaser.Physics.Matter.Sprite {
   readonly blockWidth: number
   readonly kind: BlockKind
   private scored = false
+  private placementStressApplied = false
   private readonly createdAt: number
 
   constructor(scene: Phaser.Scene, x: number, y: number, width: number, kind: BlockKind = 'server') {
@@ -33,6 +34,14 @@ export class DatacenterBlock extends Phaser.Physics.Matter.Sprite {
 
   hasScored() {
     return this.scored
+  }
+
+  markPlacementStressApplied() {
+    this.placementStressApplied = true
+  }
+
+  hasPlacementStressApplied() {
+    return this.placementStressApplied
   }
 
   isSettled() {
