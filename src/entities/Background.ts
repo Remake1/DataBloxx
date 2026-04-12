@@ -16,6 +16,12 @@ interface CloudSprite {
   wrapWidth: number
 }
 
+interface WindLineSprite {
+  line: Phaser.GameObjects.Rectangle
+  speed: number
+  wrapWidth: number
+}
+
 const PALETTES: Record<TerrainTheme, ThemePalette> = {
   plain: {
     farHill: 0x9ad68c,
@@ -202,6 +208,13 @@ export class Background {
   }
 
   /* ── Terrain ─────────────────────────────────────────────────── */
+
+  getCloudWindSpeed() {
+    if (this.clouds.length === 0) {
+      return 0
+    }
+    return this.clouds.reduce((sum, cloud) => sum + cloud.speed, 0) / this.clouds.length
+  }
 
   private drawTerrain(theme: TerrainTheme) {
     const palette = PALETTES[theme]

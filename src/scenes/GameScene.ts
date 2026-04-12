@@ -30,6 +30,8 @@ export class GameScene extends Phaser.Scene {
   private lastImpactSoundMs = 0
   private isEndless = false
   private pendingCompletionAtMs = 0
+  private windSpeed = 0
+  private windDirection = 0
   private endlessBlockKinds: BlockKind[] = ['server', 'cooling', 'power', 'network']
 
   constructor() {
@@ -63,6 +65,8 @@ export class GameScene extends Phaser.Scene {
 
     this.addGridOverlay()
     this.background = new Background(this, this.level.terrain)
+    this.windSpeed = this.level.id === 9 ? Math.abs(this.background.getCloudWindSpeed()) : 0
+    this.windDirection = this.level.id === 9 ? Math.sign(this.background.getCloudWindSpeed()) || 1 : 0
     this.addFoundation()
 
     this.crane = new CraneArm(this)
@@ -88,6 +92,8 @@ export class GameScene extends Phaser.Scene {
     if (!this.crane || this.isGameOver) {
       return
     }
+
+    this.applyWindToFallingBlocks(delta)
 
     const blocksPlaced = this.scoring.getState().blocks
     this.crane.update(
@@ -141,6 +147,39 @@ export class GameScene extends Phaser.Scene {
       this.crane?.setVisible(false)
     } else {
       this.prepareNextBlock()
+    }
+  }
+
+  private applyWindToFallingBlocks(delta: number) {
+    if (!this.windSpeed || this.windDirection === 0) {
+      return
+    }
+
+    const deltaSeconds = delta * 0.001
+
+    for (const block of this.blocks) {
+      if (block.hasScored()) {
+        continue
+      }
+
+      const body = block.body as MatterJS.BodyType
+      if (body.velocity.y <= 0) {
+        continue
+      }
+
+      // Apply wind only while the block is still falling and before it has reached the foundation
+      if (block.y >= WORLD.floorY - 24) {
+        continue
+      }
+
+      const heightRatio = Phaser.Math.Clamp((WORLD.floorY - block.y) / (WORLD.floorY - WORLD.topY), 0, 1)
+      const windIntensity = 0.18 + 0.42 * heightRatio
+      const windVelocityDelta = this.windSpeed * windIntensity * deltaSeconds
+
+      this.matter.body.setVelocity(body, {
+        x: body.velocity.x + this.windDirection * windVelocityDelta,
+        y: body.velocity.y,
+      })
     }
   }
 
