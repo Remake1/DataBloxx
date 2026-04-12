@@ -73,7 +73,7 @@ export class GameScene extends Phaser.Scene {
     this.input.on('pointerdown', () => this.dropBlock())
     this.input.keyboard?.on('keydown-SPACE', () => this.dropBlock())
 
-    gameEvents.emit(EVENTS.gameReset)
+    gameEvents.emit(EVENTS.gameReset, this.isEndless)
     gameEvents.emit(EVENTS.levelChanged, this.level)
     gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
     gameEvents.emit(
@@ -425,13 +425,13 @@ export class GameScene extends Phaser.Scene {
       }
       saveEndlessRecord(record)
       gameEvents.emit(EVENTS.gameStatus, 'Tower collapsed. Record saved.')
-      this.drawEndPanel('Tower Collapse', `${blocksPlaced} blocks placed • ${Math.round(height)}px`, [
+      this.drawEndPanel('Tower Collapse', `${blocksPlaced} blocks placed • Score: ${this.scoring.getState().score}`, [
         { label: 'Retry', action: () => this.restartLevel() },
         { label: 'Exit', action: () => this.exitToMenu() },
       ])
     } else {
       gameEvents.emit(EVENTS.gameStatus, 'Outage. Retry or return to level select.')
-      this.drawEndPanel('Deployment Failed', 'Uptime target lost.', [
+      this.drawEndPanel('Deployment Failed', `Score: ${this.scoring.getState().score}`, [
         { label: 'Retry', action: () => this.restartLevel() },
         { label: 'Exit', action: () => this.exitToMenu() },
       ])

@@ -9,7 +9,7 @@ import { hudState } from './gameState'
     <div class="hud__top-container">
       <div class="hud__bar">
         <ScoreReadout label="Score" :value="hudState.score" />
-        <ScoreReadout label="Blocks" :value="`${hudState.blocks}/${hudState.targetBlocks}`" />
+        <ScoreReadout label="Blocks" :value="hudState.isEndless ? hudState.blocks : `${hudState.blocks}/${hudState.targetBlocks}`" />
         <UptimeMeter :value="hudState.uptime" />
       </div>
       <div v-if="hudState.combo > 1" class="hud__combo">
