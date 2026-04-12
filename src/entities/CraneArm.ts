@@ -60,7 +60,8 @@ export class CraneArm {
     this.preview = scene.add
       .image(GAME_WIDTH / 2, CRANE.y + CRANE.cableLength + BLOCK.height / 2, AssetKeys.blockServer)
       .setDisplaySize(BLOCK.maxWidth, BLOCK.height)
-      .setAlpha(0.86)
+      .setAlpha(1)
+      .setDepth(5)
 
     const allElements = [
       this.railTop, this.railBase, this.railHighlight,
