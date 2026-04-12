@@ -38,7 +38,7 @@ export const CRANE = {
   previewSpinAmplitude: 0.012,
   spawnDelayMs: 520,
   releaseVelocity: 1.25,
-  releaseDropVelocity: 3.2,
+  releaseDropVelocity: 7,
   releaseSpin: 0.002,
 };
 
