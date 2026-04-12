@@ -3,7 +3,7 @@ import { BLOCK, CRANE } from '../core/constants'
 
 export class DifficultySystem {
   getCraneSpeed(blocksPlaced: number) {
-    return Math.min(2.35, 0.86 + blocksPlaced * 0.075)
+    return Math.min(1.85, 1.08 + blocksPlaced * 0.055)
   }
 
   getCraneArcHeight(blocksPlaced: number) {

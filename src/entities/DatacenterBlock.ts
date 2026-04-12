@@ -20,6 +20,7 @@ export class DatacenterBlock extends Phaser.Physics.Matter.Sprite {
     this.setRectangle(width, BLOCK.height, {
       density: BLOCK.density,
       friction: BLOCK.friction,
+      frictionStatic: BLOCK.frictionStatic,
       frictionAir: BLOCK.frictionAir,
       restitution: BLOCK.restitution,
     })
