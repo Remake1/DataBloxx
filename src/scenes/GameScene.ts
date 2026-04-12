@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser'
 import { AssetKeys } from '../core/assets'
-import { EVENTS, GAME_HEIGHT, GAME_WIDTH, WORLD } from '../core/constants'
+import { BLOCK, EVENTS, GAME_HEIGHT, GAME_WIDTH, WORLD } from '../core/constants'
 import { gameEvents } from '../core/events'
 import { DEFAULT_LEVEL, getLevelById, type BlockKind, type LevelDefinition } from '../core/levels'
 import { saveLevelCompletion } from '../core/progress'
@@ -94,6 +94,7 @@ export class GameScene extends Phaser.Scene {
     )
     this.scoreSettledBlocks()
     this.stabilizeSettledBlocks()
+    this.dampenBlocksBelowView()
     this.applyStability()
     this.moveCamera()
   }
@@ -142,7 +143,6 @@ export class GameScene extends Phaser.Scene {
       this.playSound(AssetKeys.connected, 0.55)
     } else {
       this.playImpactSound()
-      this.time.delayedCall(90, () => this.playSound(AssetKeys.connected, 0.55))
     }
     this.effects?.pulse(block.x, block.y, block.kind, result.perfect)
     gameEvents.emit(EVENTS.scoreChanged, this.scoring.getState())
@@ -155,7 +155,6 @@ export class GameScene extends Phaser.Scene {
       this.completeLevel()
       return
     }
-
   }
 
   private applyStability() {
@@ -186,21 +185,41 @@ export class GameScene extends Phaser.Scene {
 
       const body = block.body as MatterJS.BodyType
 
-      if (Math.abs(body.angularVelocity) > 0.004) {
-        this.matter.body.setAngularVelocity(body, body.angularVelocity * 0.96)
+      if (Math.abs(body.angularVelocity) > 0.0025) {
+        this.matter.body.setAngularVelocity(body, body.angularVelocity * 0.90)
       }
 
-      if (Math.abs(body.velocity.x) > 0.08) {
+      if (Math.abs(body.velocity.x) > 0.035) {
         this.matter.body.setVelocity(body, {
-          x: body.velocity.x * 0.96,
+          x: body.velocity.x * 0.90,
           y: body.velocity.y,
         })
       }
 
-      if (Math.abs(block.rotation) > 0.03) {
-        const correctedAngle = block.rotation * 0.995
+      if (Math.abs(block.rotation) > 0.02) {
+        const correctedAngle = block.rotation * 0.988
         this.matter.body.setAngle(body, correctedAngle)
       }
+    }
+  }
+
+  private dampenBlocksBelowView() {
+    const visibleBottomY = this.cameras.main.scrollY + this.cameras.main.height + BLOCK.height / 2
+
+    for (const block of this.blocks) {
+      if (!block.hasScored() || block.y <= visibleBottomY) {
+        continue
+      }
+
+      const body = block.body as MatterJS.BodyType
+      const dampedVelocityX = Math.abs(body.velocity.x) < 0.015 ? 0 : body.velocity.x * 0.55
+      const dampedAngularVelocity = Math.abs(body.angularVelocity) < 0.0015 ? 0 : body.angularVelocity * 0.55
+
+      this.matter.body.setVelocity(body, {
+        x: dampedVelocityX,
+        y: body.velocity.y,
+      })
+      this.matter.body.setAngularVelocity(body, dampedAngularVelocity)
     }
   }
 

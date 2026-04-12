@@ -1,5 +1,5 @@
-export const GAME_WIDTH = 540
-export const GAME_HEIGHT = 960
+export const GAME_WIDTH = 540;
+export const GAME_HEIGHT = 960;
 
 export const WORLD = {
   topY: -2200,
@@ -8,10 +8,10 @@ export const WORLD = {
   targetX: GAME_WIDTH / 2,
   safeTiltRadians: 0.22,
   offscreenY: GAME_HEIGHT + 160,
-  cameraFollowStartLine: 340,
-  cameraFollowEndLine: 590,
+  cameraFollowStartLine: 620,
+  cameraFollowEndLine: 820,
   cameraFollowRampBlocks: 18,
-}
+};
 
 export const BLOCK = {
   height: 56,
@@ -19,10 +19,11 @@ export const BLOCK = {
   maxWidth: 156,
   floorTouchTolerance: 3,
   restitution: 0,
-  friction: 1,
-  frictionAir: 0.038,
-  density: 0.006,
-}
+  friction: 1.4,
+  frictionStatic: 2.2,
+  frictionAir: 0.065,
+  density: 0.008,
+};
 
 export const CRANE = {
   y: 126,
@@ -36,13 +37,14 @@ export const CRANE = {
   previewSpinAmplitude: 0.012,
   spawnDelayMs: 520,
   releaseVelocity: 1.25,
+  releaseDropVelocity: 2.0,
   releaseSpin: 0.002,
-}
+};
 
 export const EVENTS = {
-  scoreChanged: 'score-changed',
-  levelChanged: 'level-changed',
-  gameStatus: 'game-status',
-  gameReset: 'game-reset',
-  menuEntered: 'menu-entered',
-} as const
+  scoreChanged: "score-changed",
+  levelChanged: "level-changed",
+  gameStatus: "game-status",
+  gameReset: "game-reset",
+  menuEntered: "menu-entered",
+} as const;

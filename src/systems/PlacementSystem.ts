@@ -35,7 +35,7 @@ export class PlacementSystem {
     const drop = this.crane.getDropPoint()
     const block = new DatacenterBlock(this.scene, drop.x, drop.y, this.nextWidth, this.nextKind)
     block.setRotation(drop.rotation)
-    block.setVelocity(drop.velocityX, 0)
+    block.setVelocity(drop.velocityX, CRANE.releaseDropVelocity)
     block.setAngularVelocity(drop.angularVelocity)
 
     this.scene.time.delayedCall(CRANE.spawnDelayMs, () => {
