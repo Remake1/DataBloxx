@@ -7,7 +7,8 @@ To install locally, follow the set-up instructions below.
 
 https://www.youtube.com/watch?v=Kk_5rGTnLEA
 
-<img width="806" height="496" alt="image" src="https://github.com/user-attachments/assets/9f717e24-403b-4bd0-a128-753dafb30913" />
+<img width="2940" height="1808" alt="image" src="https://github.com/user-attachments/assets/0b5c1be3-1c23-41c2-a479-a290316cd9e7" />
+
 <img width="2940" height="1808" alt="image" src="https://github.com/user-attachments/assets/a65cac17-b7b2-4d37-addb-325ea56d2d1a" />
 <img width="2940" height="1808" alt="image" src="https://github.com/user-attachments/assets/50593111-bb82-46b1-a88d-d84346d335d9" />
 
