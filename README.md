@@ -5,6 +5,13 @@ City/Tower Bloxx, rebranded around stacking datacenter modules.
 Can be played online by following this [link](https://data-bloxx.vercel.app/).
 To install locally, follow the set-up instructions below.
 
+https://www.youtube.com/watch?v=Kk_5rGTnLEA
+
+<img width="806" height="496" alt="image" src="https://github.com/user-attachments/assets/9f717e24-403b-4bd0-a128-753dafb30913" />
+<img width="806" height="496" alt="image" src="https://github.com/user-attachments/assets/b9ce4cd9-a42f-4bb8-96af-c391d08dcc4e" />
+<img width="806" height="496" alt="image" src="https://github.com/user-attachments/assets/f86d5181-39e5-4b67-9b8a-4514c72b0e49" />
+
+
 ## Stack
 
 - Phaser 4
