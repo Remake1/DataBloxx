@@ -5,7 +5,18 @@ City/Tower Bloxx, rebranded around stacking datacenter modules.
 Can be played online by following this [link](https://data-bloxx.vercel.app/).
 To install locally, follow the set-up instructions below.
 
+## Stack
+
+- Phaser 4
+- Matter.js physics through Phaser
+- Vite
+- TypeScript
+- Vue 3
+
+### Demo Video
 https://www.youtube.com/watch?v=Kk_5rGTnLEA
+
+### Screenshots
 
 <img width="2940" height="1808" alt="image" src="https://github.com/user-attachments/assets/0b5c1be3-1c23-41c2-a479-a290316cd9e7" />
 
@@ -14,13 +25,7 @@ https://www.youtube.com/watch?v=Kk_5rGTnLEA
 
 
 
-## Stack
 
-- Phaser 4
-- Matter.js physics through Phaser
-- Vite
-- TypeScript
-- Vue 3
 
 ## Run
 
