@@ -1,9 +1,16 @@
 # DataBloxx
 
-DataBloxx is a small web game starter inspired by the tower-building feel of
+DataBloxx is a small web game inspired by the tower-building feel of
 City/Tower Bloxx, rebranded around stacking datacenter modules.
 Can be played online by following this [link](https://data-bloxx.vercel.app/).
 To install locally, follow the set-up instructions below.
+
+DataBloxx is an arcade stacking game where you build a towering datacenter. Runs in browser on desktop and mobile.
+
+A crane swings server blocks back and forth, and you have to time your drops perfectly to stack them as high as possible. Clean drops keep your tower sturdy and boost your score. Sloppy drops make the tower sway, bend, and eventually collapse, meaning your server goes down.
+
+Game runs in web, built using Phaser.js engine and TypeScript.
+
 
 ## Stack
 
